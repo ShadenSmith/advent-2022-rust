@@ -1,16 +1,10 @@
 
-use std::fs;
-use std::io::{BufRead,BufReader};
+
+use day2::*;
 
 fn main() {
-    let fname = "input.txt";
-    let reader = BufReader::new(fs::File::open(fname).unwrap());
+    let guide = parse_strategy_guide("input.txt");
+    println!("{:?}", guide);
 
-    for line in reader.lines() {
-        let line = line.unwrap();
-        //let hand: Vec[RPS]::new();
-        for c in line.split_whitespace() {
-            
-        }
-    }
+    println!("{:?}", score_strategy_guide(&guide));
 }
