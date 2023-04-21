@@ -41,7 +41,7 @@ impl State {
             State::Rock => 1,
             State::Paper => 2,
             State::Scissors => 3,
-        }
+        };
     }
 
     pub fn score_versus(&self, other: State) -> Outcome {
@@ -126,7 +126,7 @@ fn compute_desired_hand(hand: &RockPaperScissors) -> State {
             Outcome::Draw => State::Scissors,
             Outcome::Win => State::Rock,
         },
-    }
+    };
 }
 
 fn compute_ideal(guide: &[RockPaperScissors]) -> Vec<RockPaperScissors> {
