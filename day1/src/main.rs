@@ -34,7 +34,7 @@ pub mod day1 {
         for _ in 0..k {
             topk += top_calories.pop().unwrap();
         }
-        return topk;
+        topk
     }
 }
 
