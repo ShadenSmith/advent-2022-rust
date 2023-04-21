@@ -3,13 +3,11 @@ mod tests_day3 {
 
     use day3::*;
 
-
     #[test]
     fn test_find_shared_items() {
         //let chunks = vec!["abc".chars().collect(), "bww".chars().collect(), "jjb".chars().collect()];
         //assert_eq!(find_shared_items(chunks), vec!['b']);
     }
-
 
     #[test]
     fn test_rucksack_parse() {
@@ -35,8 +33,14 @@ mod tests_day3 {
         let teams = parse_teams("input_test.txt");
         assert_eq!(teams.len(), 2);
 
-        assert_eq!(teams[0].group_a, "vJrwpWtwJgWrhcsFMMfFFhFp".chars().collect::<Vec<char>>());
-        assert_eq!(teams[1].group_c, "CrZsJsPPZsGzwwsLwLmpwMDw".chars().collect::<Vec<char>>());
+        assert_eq!(
+            teams[0].group_a,
+            "vJrwpWtwJgWrhcsFMMfFFhFp".chars().collect::<Vec<char>>()
+        );
+        assert_eq!(
+            teams[1].group_c,
+            "CrZsJsPPZsGzwwsLwLmpwMDw".chars().collect::<Vec<char>>()
+        );
     }
 
     #[test]

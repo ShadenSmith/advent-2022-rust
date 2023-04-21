@@ -1,15 +1,17 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::primitive::char;
-use std::collections::HashSet;
 
 pub fn find_shared_items(chunks: Vec<&[char]>) -> Vec<char> {
     if chunks.len() == 0 {
         return vec![];
     }
 
-    let hashes: Vec<HashSet<char>> = chunks.iter().map(|c| 
-        HashSet::from_iter(c.to_vec())).collect();
+    let hashes: Vec<HashSet<char>> = chunks
+        .iter()
+        .map(|c| HashSet::from_iter(c.to_vec()))
+        .collect();
 
     let mut in_all = hashes[0].clone();
 
@@ -43,7 +45,7 @@ impl Rucksack {
     pub fn left_sack(&self) -> String {
         self.left.iter().collect()
     }
-    
+
     pub fn right_sack(&self) -> String {
         self.right.iter().collect()
     }
@@ -74,7 +76,6 @@ pub fn parse_rucksacks(path: &str) -> Vec<Rucksack> {
         .collect();
     sacks
 }
-
 
 pub struct Team {
     pub group_a: Vec<char>,
@@ -112,11 +113,10 @@ pub fn parse_teams(path: &str) -> Vec<Team> {
 
     let mut teams: Vec<Team> = Vec::new();
     for idx in (0..lines.len()).step_by(3) {
-        teams.push(Team::parse(&lines[idx], &lines[idx+1], &lines[idx+2]));
+        teams.push(Team::parse(&lines[idx], &lines[idx + 1], &lines[idx + 2]));
     }
     teams
 }
-
 
 fn priority(token: char) -> u32 {
     if !token.is_ascii_alphabetic() {
@@ -131,8 +131,6 @@ fn priority(token: char) -> u32 {
 
     offset + u32::from(token) - u32::from(base_char)
 }
-
-
 
 pub fn overlap_priority(sacks: &[Rucksack]) -> u32 {
     sacks.iter().map(|s| priority(s.find_shared_item())).sum()

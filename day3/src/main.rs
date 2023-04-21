@@ -1,6 +1,4 @@
-
 use day3::*;
-
 
 fn main() {
     let sacks = parse_rucksacks("day3/input.txt");
