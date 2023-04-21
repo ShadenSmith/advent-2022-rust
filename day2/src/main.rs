@@ -1,5 +1,3 @@
-
-
 use day2::*;
 
 fn main() {
