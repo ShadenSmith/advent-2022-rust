@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::primitive::char;
 
 pub fn find_shared_items(chunks: Vec<&[char]>) -> Vec<char> {
-    if chunks.len() == 0 {
+    if chunks.is_empty() {
         return vec![];
     }
 
@@ -15,8 +15,8 @@ pub fn find_shared_items(chunks: Vec<&[char]>) -> Vec<char> {
 
     let mut in_all = hashes[0].clone();
 
-    for query_idx in 1..chunks.len() {
-        in_all = in_all.intersection(&hashes[query_idx]).cloned().collect();
+    for hash in hashes.iter().skip(1) {
+        in_all = in_all.intersection(hash).cloned().collect()
     }
 
     in_all.iter().cloned().collect()
@@ -59,7 +59,7 @@ impl Rucksack {
         // Now query right against left
         for item in self.right.iter() {
             if left_set.contains(&item) {
-                return item.clone();
+                return *item;
             }
         }
 
@@ -98,7 +98,7 @@ impl Team {
             panic!("Found more than 1 item in all groups {:?}", shared);
         }
 
-        shared[0].clone()
+        shared[0]
     }
 }
 
