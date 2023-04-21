@@ -117,9 +117,9 @@ fn compute_desired_hand(hand : &RockPaperScissors) -> State {
 
     return match hand.p1 {
         State::Rock => match desired {
-            Outcome::Lose => State::Paper,
+            Outcome::Lose => State::Scissors,
             Outcome::Draw => State::Rock,
-            Outcome::Win => State::Scissors,
+            Outcome::Win => State::Paper,
         },
         State::Paper => match desired {
             Outcome::Lose => State::Rock,
