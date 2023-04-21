@@ -1,6 +1,5 @@
-
 #[cfg(test)]
-mod tests_day3{
+mod tests_day3 {
 
     use day3::*;
 

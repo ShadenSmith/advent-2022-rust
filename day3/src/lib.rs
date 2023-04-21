@@ -1,4 +1,3 @@
-
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::primitive::char;
@@ -19,7 +18,7 @@ impl Rucksack {
         let half = len / 2;
         Rucksack {
             left: leftright[0..half].to_string(),
-            right: leftright[half..len].to_string(), 
+            right: leftright[half..len].to_string(),
         }
     }
 }
@@ -27,7 +26,10 @@ impl Rucksack {
 pub fn parse_rucksacks(path: &str) -> Vec<Rucksack> {
     let reader = BufReader::new(File::open(path).expect("File not found"));
 
-    let sacks: Vec<Rucksack> = reader.lines().map(|s| Rucksack::parse(&s.unwrap())).collect();
+    let sacks: Vec<Rucksack> = reader
+        .lines()
+        .map(|s| Rucksack::parse(&s.unwrap()))
+        .collect();
     sacks
 }
 
@@ -57,5 +59,4 @@ mod tests_day3 {
         assert_eq!(priority('A'), 27);
         assert_eq!(priority('Z'), 52);
     }
-
 }
