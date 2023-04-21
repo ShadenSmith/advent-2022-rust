@@ -42,7 +42,7 @@ pub fn sumtopk_elves(path: &str, k: i32) -> i32 {
 
 
 fn main() {
-    let fname: String = String::from("input.txt");
+    let fname: String = String::from("day1/input.txt");
     let sumtop3 = day1::sumtopk_elves(&fname, 3);
     println!("Top 3: {sumtop3}");
 }
