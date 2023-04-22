@@ -1,12 +1,13 @@
 
+pub mod day1 {
+
 use std::fs;
 use std::io::{BufRead,BufReader};
 use std::collections::BinaryHeap;
 
 
-fn main() {
-    let fname = "input.txt";
-    let reader = BufReader::new(fs::File::open(fname).unwrap());
+pub fn sumtopk_elves(path: &str, k: i32) -> i32 {
+    let reader = BufReader::new(fs::File::open(path).unwrap());
 
     let mut most_cals = 0;
     let mut curr_cals = 0;
@@ -31,12 +32,17 @@ fn main() {
         }
     }
 
-    println!("most: {}", most_cals);
-
-    let mut top3 = 0;
-    for _ in 0..3 {
-        top3 += top_calories.pop().unwrap();
+    let mut topk = 0;
+    for _ in 0..k {
+        topk += top_calories.pop().unwrap();
     }
+    return topk
+}
+}
 
-    println!("Top 3: {top3}");
+
+fn main() {
+    let fname: String = String::from("input.txt");
+    let sumtop3 = day1::sumtopk_elves(&fname, 3);
+    println!("Top 3: {sumtop3}");
 }
