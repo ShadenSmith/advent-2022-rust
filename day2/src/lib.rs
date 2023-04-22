@@ -1,11 +1,8 @@
-
-
 //use std::format;
 use std::fs::File;
-use std::io::{BufRead,BufReader};
+use std::io::{BufRead, BufReader};
 
-
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum State {
     Rock,
     Paper,
@@ -44,7 +41,7 @@ impl State {
             State::Rock => 1,
             State::Paper => 2,
             State::Scissors => 3,
-        }
+        };
     }
 
     pub fn score_versus(&self, other: State) -> Outcome {
@@ -88,7 +85,6 @@ impl RockPaperScissors {
 }
 
 pub fn parse_strategy_guide(path: &str) -> Vec<RockPaperScissors> {
-
     let mut guide: Vec<RockPaperScissors> = vec![];
     let reader = BufReader::new(File::open(path).unwrap());
     for line in reader.lines() {
@@ -103,11 +99,10 @@ pub fn parse_strategy_guide(path: &str) -> Vec<RockPaperScissors> {
         guide.push(RockPaperScissors::parse(&hand[0], &hand[1]));
     }
 
-    return guide
+    return guide;
 }
 
-fn compute_desired_hand(hand : &RockPaperScissors) -> State {
-
+fn compute_desired_hand(hand: &RockPaperScissors) -> State {
     // Part 2: convert X, Y, Z => L, D, W
     let desired: Outcome = match hand.p2 {
         State::Rock => Outcome::Lose,
@@ -131,11 +126,17 @@ fn compute_desired_hand(hand : &RockPaperScissors) -> State {
             Outcome::Draw => State::Scissors,
             Outcome::Win => State::Rock,
         },
-    }
+    };
 }
 
 fn compute_ideal(guide: &[RockPaperScissors]) -> Vec<RockPaperScissors> {
-    return guide.iter().map(|g| RockPaperScissors { p1: g.p1, p2: compute_desired_hand(g)} ).collect();
+    return guide
+        .iter()
+        .map(|g| RockPaperScissors {
+            p1: g.p1,
+            p2: compute_desired_hand(g),
+        })
+        .collect();
 }
 
 pub fn score_strategy_guide(guide: &[RockPaperScissors]) -> i32 {
