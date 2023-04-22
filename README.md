@@ -1,2 +1,2 @@
 # Advent of Code 2022 (in Rust!)
-Slowly plodding along AoC and writing my first rust code.
+Slowly working through [AoC](https://adventofcode.com/2022) and learning rust.
