@@ -11,3 +11,8 @@ Cargo.lock
 
 #VS-Code workspaces
 *.code-workspace
+
+
+# Added by cargo
+
+/target

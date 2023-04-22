@@ -25,7 +25,7 @@ fn match_value(result: Outcome) -> i32 {
 
 impl State {
     pub fn parse(symbol: &str) -> State {
-        return match symbol {
+        match symbol {
             "A" => State::Rock,
             "B" => State::Paper,
             "C" => State::Scissors,
@@ -33,15 +33,15 @@ impl State {
             "Y" => State::Paper,
             "Z" => State::Scissors,
             &_ => todo!(),
-        };
+        }
     }
 
     pub fn value(&self) -> i32 {
-        return match self {
+        match self {
             State::Rock => 1,
             State::Paper => 2,
             State::Scissors => 3,
-        };
+        }
     }
 
     pub fn score_versus(&self, other: State) -> Outcome {
@@ -80,7 +80,7 @@ impl RockPaperScissors {
     }
 
     fn score_p2(&self) -> i32 {
-        return self.p2.value() + match_value(self.p2.score_versus(self.p1));
+        self.p2.value() + match_value(self.p2.score_versus(self.p1))
     }
 }
 
@@ -99,7 +99,7 @@ pub fn parse_strategy_guide(path: &str) -> Vec<RockPaperScissors> {
         guide.push(RockPaperScissors::parse(&hand[0], &hand[1]));
     }
 
-    return guide;
+    guide
 }
 
 fn compute_desired_hand(hand: &RockPaperScissors) -> State {
@@ -110,7 +110,7 @@ fn compute_desired_hand(hand: &RockPaperScissors) -> State {
         State::Scissors => Outcome::Win,
     };
 
-    return match hand.p1 {
+    match hand.p1 {
         State::Rock => match desired {
             Outcome::Lose => State::Scissors,
             Outcome::Draw => State::Rock,
@@ -126,24 +126,24 @@ fn compute_desired_hand(hand: &RockPaperScissors) -> State {
             Outcome::Draw => State::Scissors,
             Outcome::Win => State::Rock,
         },
-    };
+    }
 }
 
 fn compute_ideal(guide: &[RockPaperScissors]) -> Vec<RockPaperScissors> {
-    return guide
+    guide
         .iter()
         .map(|g| RockPaperScissors {
             p1: g.p1,
             p2: compute_desired_hand(g),
         })
-        .collect();
+        .collect()
 }
 
 pub fn score_strategy_guide(guide: &[RockPaperScissors]) -> i32 {
-    return guide.iter().map(|g| g.score_p2()).sum();
+    guide.iter().map(|g| g.score_p2()).sum()
 }
 
 pub fn score_strategy_guide_pt2(guide: &[RockPaperScissors]) -> i32 {
     let ideal_guide = compute_ideal(guide);
-    return score_strategy_guide(&ideal_guide);
+    score_strategy_guide(&ideal_guide)
 }
