@@ -4,12 +4,6 @@ mod tests_day3 {
     use day3::*;
 
     #[test]
-    fn test_find_shared_items() {
-        //let chunks = vec!["abc".chars().collect(), "bww".chars().collect(), "jjb".chars().collect()];
-        //assert_eq!(find_shared_items(chunks), vec!['b']);
-    }
-
-    #[test]
     fn test_rucksack_parse() {
         let sack = Rucksack::parse("abcdEFGH");
         assert_eq!(sack.left_sack(), "abcd");
