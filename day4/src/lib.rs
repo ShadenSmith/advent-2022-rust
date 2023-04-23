@@ -10,7 +10,7 @@ pub struct Range {
 impl Range {
     pub fn parse(lo_hi: &str) -> Range {
         let parsed: Vec<i32> = lo_hi
-            .split("-")
+            .split('-')
             .map(|s| s.parse::<i32>().unwrap())
             .collect();
         if parsed.len() != 2 {
@@ -51,7 +51,7 @@ pub fn parse_range_file(path: &str) -> Vec<(Range, Range)> {
 
     let reader = BufReader::new(File::open(path).expect("File not found"));
     for line in reader.lines() {
-        let parsed_ranges: Vec<Range> = line.unwrap().split(",").map(Range::parse).collect();
+        let parsed_ranges: Vec<Range> = line.unwrap().split(',').map(Range::parse).collect();
         ranges.push((parsed_ranges[0], parsed_ranges[1]));
     }
 
