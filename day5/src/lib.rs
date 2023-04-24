@@ -1,6 +1,10 @@
 
 use std::fmt;
 use std::primitive::char;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
+use std::collections::VecDeque;
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -31,5 +35,30 @@ impl Crate {
             Some(_) => Some(Crate {id : caps?.get(1).unwrap().as_str().chars().collect::<Vec<_>>()[0] }),
             _ => None,
         }
+    }
+}
+
+pub struct ShipState {
+    stacks: Vec<VecDeque<Crate>>,
+}
+
+impl ShipState {
+    pub fn new(num_stacks: u32) -> ShipState {
+        let mut stacks = Vec::new();
+        for idx in 0..num_stacks {
+            stacks.push(VecDeque::new())
+        }
+        ShipState { stacks: stacks }
+    }
+
+    pub fn move_crates(&self, count: u32, from_stack: u32, to_stack: u32) -> Option<Crate> {
+        None
+    }
+}
+
+pub fn parse_crate_file(path: &str) -> () {
+    let reader = BufReader::new(File::open(path).expect("File not found"));
+    for line in reader.lines() {
+
     }
 }
