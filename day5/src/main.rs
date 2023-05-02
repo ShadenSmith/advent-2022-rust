@@ -1,6 +1,3 @@
-
 use day5::*;
 
-pub fn main() {
-
-}
+pub fn main() {}
