@@ -30,12 +30,28 @@ mod tests_day5 {
     }
 
     #[test]
+    fn test_parse_ship() {
+        let ship = ShipState::from_path("input_test.txt");
+
+        assert_eq!(ship.num_stacks(), 3);
+        assert_eq!(ship.top_stacks(), "NDP");
+    }
+
+    #[test]
     fn test_move_crates() {
-        let ship = ShipState::new(4);
+        let mut ship = ShipState::from_path("input_test.txt");
+        ship.move_crates(2, 2, 3);
+        assert_eq!(ship.top_stacks(), "NMC");
     }
 
     #[test]
     fn test_pt1() {
-        todo!()
+        let (mut ship, steps) = parse_crate_file("input_test.txt");
+
+        for step in steps.iter() {
+            ship.move_crates(step.count, step.from, step.to);
+        }
+
+        assert_eq!(ship.top_stacks(), "CMZ");
     }
 }
