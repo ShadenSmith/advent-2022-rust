@@ -123,14 +123,16 @@ impl ShipState {
         line_buf.clear();
         reader.read_line(&mut line_buf).expect("Could not parse line.");
 
+        if parsed_stacks.is_empty() {
+            return ShipState::new(0);
+        }
 
-        let mut ship = ShipState::new(parsed_stacks.len().try_into().unwrap());
+        let mut ship = ShipState::new(parsed_stacks[0].len().try_into().unwrap());
         for parsed_line in parsed_stacks.iter() {
             // Add any parsed crates to the end of the stack
             for (stack_idx, parsed) in parsed_line.iter().enumerate() {
                 if let Some(c) = parsed {
                     ship.stacks[stack_idx].push_back(c.clone());
-
                 }
             }
         }
@@ -159,8 +161,15 @@ impl ShipState {
 
         top
     }
+
+    pub fn execute(&mut self, steps: &Vec<Step>) {
+        for step in steps.iter() {
+            self.move_crates(step.count, step.from, step.to);
+        }
+    }
 }
 
+#[derive(Debug)]
 pub struct Step {
     pub count: u32,
     pub from: u32,

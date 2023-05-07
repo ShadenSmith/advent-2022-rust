@@ -48,9 +48,7 @@ mod tests_day5 {
     fn test_pt1() {
         let (mut ship, steps) = parse_crate_file("input_test.txt");
 
-        for step in steps.iter() {
-            ship.move_crates(step.count, step.from, step.to);
-        }
+        ship.execute(&steps);
 
         assert_eq!(ship.top_stacks(), "CMZ");
     }
