@@ -51,7 +51,7 @@ impl ShipState {
         for idx in 0..num_stacks {
             stacks.push(VecDeque::new())
         }
-        ShipState { stacks: stacks }
+        ShipState { stacks }
     }
 
     pub fn move_crates(&mut self, count: u32, from_stack: u32, to_stack: u32) -> Option<Crate> {
@@ -59,10 +59,10 @@ impl ShipState {
         let from_stack_idx: usize = (from_stack - 1).try_into().unwrap();
         let to_stack_idx: usize = (to_stack - 1).try_into().unwrap();
 
-        if from_stack_idx >= self.stacks.len().try_into().unwrap() {
+        if from_stack_idx >= self.stacks.len() {
             panic!("Invalid source stack.");
         }
-        if to_stack_idx >= self.stacks.len().try_into().unwrap() {
+        if to_stack_idx >= self.stacks.len() {
             panic!("Invalid destination stack.");
         }
 
@@ -162,7 +162,7 @@ impl ShipState {
         top
     }
 
-    pub fn execute(&mut self, steps: &Vec<Step>) {
+    pub fn execute(&mut self, steps: &[Step]) {
         for step in steps.iter() {
             self.move_crates(step.count, step.from, step.to);
         }
