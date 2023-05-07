@@ -1,17 +1,16 @@
+#![allow(unused, unused_imports)]
 
-#![allow(unused,unused_imports)]
-
-use std::{fmt, vec};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::primitive::char;
+use std::{fmt, vec};
 
 use std::collections::VecDeque;
 
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct Crate {
     pub id: char,
 }
@@ -84,7 +83,7 @@ impl ShipState {
 
         let mut offset: usize = 0;
         while offset < line.len() {
-            crates.push(Crate::parse(&line[offset..offset+3]));
+            crates.push(Crate::parse(&line[offset..offset + 3]));
             offset += 4;
         }
 
@@ -106,9 +105,10 @@ impl ShipState {
         let mut parsing_init = true;
         while parsing_init {
             line_buf.clear();
-            reader.read_line(&mut line_buf).expect("Could not parse line.");
+            reader
+                .read_line(&mut line_buf)
+                .expect("Could not parse line.");
 
-            
             let parsed_crates = ShipState::parse_crate_line(&line_buf);
 
             // Stop when we reach a line with no crates
@@ -121,7 +121,9 @@ impl ShipState {
 
         // Eat the next line of stack numbers
         line_buf.clear();
-        reader.read_line(&mut line_buf).expect("Could not parse line.");
+        reader
+            .read_line(&mut line_buf)
+            .expect("Could not parse line.");
 
         if parsed_stacks.is_empty() {
             return ShipState::new(0);
@@ -140,7 +142,6 @@ impl ShipState {
         ship
     }
 
-
     pub fn num_stacks(&self) -> usize {
         self.stacks.len()
     }
@@ -156,7 +157,6 @@ impl ShipState {
             } else {
                 top.push(' ');
             }
-
         }
 
         top
@@ -188,7 +188,7 @@ pub fn parse_steps(reader: &mut BufReader<File>) -> Vec<Step> {
             let count: u32 = caps.get(1).unwrap().as_str().parse().unwrap();
             let from: u32 = caps.get(2).unwrap().as_str().parse().unwrap();
             let to: u32 = caps.get(3).unwrap().as_str().parse().unwrap();
-            steps.push(Step{count, from, to})
+            steps.push(Step { count, from, to })
         }
     }
 
