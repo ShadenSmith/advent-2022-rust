@@ -12,5 +12,6 @@ pub fn main() {
         panic!("Read failed: {}", error);
     }
 
-    println!("part 1: {}", find_start_marker(&msg));
+    println!("part 1: {}", find_packet_start(&msg));
+    println!("part 2: {}", find_message_start(&msg));
 }

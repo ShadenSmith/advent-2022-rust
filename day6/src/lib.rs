@@ -12,18 +12,26 @@ fn repeats_in_window(window: &str) -> bool {
     false
 }
 
-pub fn find_start_marker(msg: &str) -> usize {
-    if msg.len() < 4 {
+pub fn find_start_marker(msg: &str, window_size: usize) -> usize {
+    if msg.len() < window_size {
         return msg.len();
     }
 
-    for offset in 0..msg.len() - 4 {
-        if !repeats_in_window(&msg[offset..offset + 4]) {
-            return offset + 4;
+    for offset in 0..msg.len() - window_size {
+        if !repeats_in_window(&msg[offset..offset + window_size]) {
+            return offset + window_size;
         }
     }
 
     msg.len()
+}
+
+pub fn find_packet_start(msg: &str) -> usize {
+    find_start_marker(msg, 4)
+}
+
+pub fn find_message_start(msg: &str) -> usize {
+    find_start_marker(msg, 14)
 }
 
 #[cfg(test)]
@@ -31,11 +39,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        assert_eq!(find_start_marker("bvwbjplbgvbhsrlpgdmjqwftvncz"), 5);
-        assert_eq!(find_start_marker("nppdvjthqldpwncqszvftbrmjlhg"), 6);
-        assert_eq!(find_start_marker("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 10);
-        assert_eq!(find_start_marker("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"), 11);
+    fn test_pt1() {
+        assert_eq!(find_packet_start("bvwbjplbgvbhsrlpgdmjqwftvncz"), 5);
+        assert_eq!(find_packet_start("nppdvjthqldpwncqszvftbrmjlhg"), 6);
+        assert_eq!(find_packet_start("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 10);
+        assert_eq!(find_packet_start("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"), 11);
+    }
+
+    #[test]
+    fn test_pt2() {
+        assert_eq!(find_message_start("mjqjpqmgbljsphdztnvjfqwrcgsmlb"), 19);
+        assert_eq!(find_message_start("bvwbjplbgvbhsrlpgdmjqwftvncz"), 23);
+        assert_eq!(find_message_start("nppdvjthqldpwncqszvftbrmjlhg"), 23);
+        assert_eq!(find_message_start("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 29);
+        assert_eq!(find_message_start("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"), 26);
     }
 
     #[test]
