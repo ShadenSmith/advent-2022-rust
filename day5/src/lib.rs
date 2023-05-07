@@ -54,7 +54,7 @@ impl ShipState {
         ShipState { stacks }
     }
 
-    pub fn move_crates(&mut self, count: u32, from_stack: u32, to_stack: u32) -> Option<Crate> {
+    pub fn move_crates(&mut self, count: u32, from_stack: u32, to_stack: u32) {
         // Switch from 1-indexing to 0-indexing
         let from_stack_idx: usize = (from_stack - 1).try_into().unwrap();
         let to_stack_idx: usize = (to_stack - 1).try_into().unwrap();
@@ -74,8 +74,34 @@ impl ShipState {
             let popped = self.stacks[from_stack_idx].pop_front().unwrap();
             self.stacks[to_stack_idx].push_front(popped);
         }
+    }
 
-        None
+    pub fn move_crates_together(&mut self, count: u32, from_stack: u32, to_stack: u32) {
+        // Switch from 1-indexing to 0-indexing
+        let from_stack_idx: usize = (from_stack - 1).try_into().unwrap();
+        let to_stack_idx: usize = (to_stack - 1).try_into().unwrap();
+
+        if from_stack_idx >= self.stacks.len() {
+            panic!("Invalid source stack.");
+        }
+        if to_stack_idx >= self.stacks.len() {
+            panic!("Invalid destination stack.");
+        }
+
+        if self.stacks[from_stack_idx].len() < count.try_into().unwrap() {
+            panic!("Stack does not hold enough crates to move.");
+        }
+
+        let mut collect_popped = Vec::with_capacity(count.try_into().unwrap());
+
+        for c in 0..count {
+            let popped = self.stacks[from_stack_idx].pop_front().unwrap();
+            collect_popped.push(popped);
+        }
+
+        for popped in collect_popped.into_iter().rev() {
+            self.stacks[to_stack_idx].push_front(popped);
+        }
     }
 
     pub fn parse_crate_line(line: &str) -> Vec<Option<Crate>> {
@@ -165,6 +191,12 @@ impl ShipState {
     pub fn execute(&mut self, steps: &[Step]) {
         for step in steps.iter() {
             self.move_crates(step.count, step.from, step.to);
+        }
+    }
+
+    pub fn execute_pt2(&mut self, steps: &[Step]) {
+        for step in steps.iter() {
+            self.move_crates_together(step.count, step.from, step.to);
         }
     }
 }

@@ -52,4 +52,13 @@ mod tests_day5 {
 
         assert_eq!(ship.top_stacks(), "CMZ");
     }
+
+    #[test]
+    fn test_pt2() {
+        let (mut ship, steps) = parse_crate_file("input_test.txt");
+
+        ship.execute_pt2(&steps);
+
+        assert_eq!(ship.top_stacks(), "MCD");
+    }
 }
