@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod tests_day4 {
 
-    use core::num;
-
     use day4::*;
 
     #[test]
