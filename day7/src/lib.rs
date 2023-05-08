@@ -37,25 +37,25 @@ enum Cmd {
 impl Cmd {
     pub fn parse(line: &str) -> Self {
         lazy_static! {
-            static ref RE_ChangeDir: Regex = Regex::new(r"\$ cd (.*)").unwrap();
-            static ref RE_ListDir: Regex = Regex::new(r"\$ ls").unwrap();
-            static ref RE_StatDir: Regex = Regex::new(r"dir (.*)").unwrap();
-            static ref RE_StatFile: Regex = Regex::new(r"(\d+) (.*)").unwrap();
+            static ref RE_CHANGE_DIR: Regex = Regex::new(r"\$ cd (.*)").unwrap();
+            static ref RE_LIST_DIR: Regex = Regex::new(r"\$ ls").unwrap();
+            static ref RE_STAT_DIR: Regex = Regex::new(r"dir (.*)").unwrap();
+            static ref RE_STAT_FILE: Regex = Regex::new(r"(\d+) (.*)").unwrap();
         }
 
-        if let Some(cap) = RE_ChangeDir.captures(line) {
+        if let Some(cap) = RE_CHANGE_DIR.captures(line) {
             return Cmd::ChangeDir(cap.get(1).unwrap().as_str().to_string());
         }
 
-        if let Some(cap) = RE_ListDir.captures(line) {
+        if let Some(cap) = RE_LIST_DIR.captures(line) {
             return Cmd::ListDir;
         }
 
-        if let Some(cap) = RE_StatDir.captures(line) {
+        if let Some(cap) = RE_STAT_DIR.captures(line) {
             return Cmd::StatDir(cap.get(1).unwrap().as_str().to_string());
         }
 
-        if let Some(cap) = RE_StatFile.captures(line) {
+        if let Some(cap) = RE_STAT_FILE.captures(line) {
             return Cmd::StatFile(
                 cap.get(1).unwrap().as_str().parse().unwrap(),
                 cap.get(2).unwrap().as_str().to_string(),
@@ -152,6 +152,7 @@ impl FileSystem {
         // Walk the children and insert new directory if necessary
         for child in &self.cwd.children {
             if child.name == name {
+                println!("{} already found, returning.", name);
                 return;
             }
         }
@@ -238,5 +239,10 @@ mod tests {
         assert_eq!(Cmd::parse("$ ls"), Cmd::ListDir);
         assert_eq!(Cmd::parse("dir a"), Cmd::StatDir(String::from("a")));
         assert_eq!(Cmd::parse("1234 a"), Cmd::StatFile(1234, String::from("a")));
+    }
+
+    #[test]
+    fn test_part1() {
+        //let fs = FileSystem::from_path("input_test.txt");
     }
 }
