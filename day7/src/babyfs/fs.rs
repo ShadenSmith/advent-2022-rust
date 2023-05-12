@@ -1,88 +1,91 @@
-
-use std::cell::RefCell;
 use std::rc::Rc;
+
+use std::collections::VecDeque;
 
 use std::borrow::Borrow;
 
 use std::fs::File;
 use std::io::{read_to_string, BufReader};
 
-use crate::babyfs::error::FileSystemError;
-use crate::babyfs::node::Node;
 use crate::babyfs::cmds::Cmd;
-
+use crate::babyfs::error::FileSystemError;
+use crate::babyfs::node::{Node, NodeType, RcRef};
 
 #[derive(Debug)]
 pub struct FileSystem {
-    root: Rc<RefCell<Node>>,
-    cwd: Rc<RefCell<Node>>,
+    root: RcRef<Node>,
+    cwd_stack: VecDeque<RcRef<Node>>,
 }
-
 
 impl FileSystem {
     pub fn new() -> Self {
-        let root = Rc::new(RefCell::new(Node::new_dir("/", None)));
+        let root = Node::new_dir("/");
         FileSystem {
             root: Rc::clone(&root),
-            cwd: Rc::clone(&root),
+            cwd_stack: VecDeque::new(),
         }
+    }
+
+    pub fn get_cwd(&self) -> RcRef<Node> {
+        Rc::clone(self.cwd_stack.front().expect("No directory set."))
     }
 
     pub fn cd(&mut self, name: &str) {
-        if name == "/" {
-            self.cwd = Rc::clone(&self.root);
-            return;
+        match name {
+            "/" => {
+                self.cwd_stack.clear();
+                self.cwd_stack.push_front(Rc::clone(&self.root));
+            }
+            ".." => {
+                self.cwd_stack
+                    .pop_front()
+                    .expect("Cannot go up a directory, already at root.");
+            }
+            _ => {
+                let new_cwd = self
+                    .cwd_stack
+                    .front()
+                    .unwrap()
+                    .as_ref()
+                    .borrow()
+                    .get_child_by_name(name)
+                    .expect("Directory not found.");
+                self.cwd_stack.push_front(Rc::clone(&new_cwd));
+            }
         }
 
-        //let new_cwd = match name {
-        //    "/" => Ok(Rc::clone(&self.root)),
-        //    ".." => todo!(),
-        //       // match &self.cwd.parent {
-        //       // Some(n) => Ok(Rc::clone(&n)),
-        //       // None => Err(FileSystemError {
-        //       //     msg: String::from("Invalid directory"),
-        //       // }),
-        //    _ => todo!(),// self.cwd.get_child_by_name(name),
-        //};
-
-        //if new_cwd.is_ok() {
-        //    self.cwd = new_cwd.unwrap();
-        //} else {
-        //    panic!("Could not change directory.");
-        //}
+        println!("stack is now: {:?}", self.cwd_stack.len());
     }
 
     pub fn stat_dir(&mut self, name: &str) {
-        // // Walk the children and insert new directory if necessary
-        // for child in &self.cwd.children {
-        //     if child.name == name {
-        //         println!("{} already found, returning.", name);
-        //         return;
-        //     }
-        // }
+        let curr_dir = self
+            .cwd_stack
+            .front()
+            .expect("Directory stack empty?")
+            .as_ref();
 
-        // let parent = Some(Rc::clone(&self.cwd));
+        if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
+            println!("{} already found, returning.", name);
+            return;
+        }
 
-        // // Build new node
-        // let mut cwd_mut = Rc::make_mut(&mut self.cwd);
-        // cwd_mut.children.push(Rc::new(Node::new_dir(name, parent)));
+        curr_dir.borrow_mut().add_child(Node::new_dir(name));
     }
 
     pub fn stat_file(&mut self, name: &str, size: usize) {
-       // // Walk the children and insert new file if necessary
-       // for child in &self.cwd.children {
-       //     if child.name == name {
-       //         assert_eq!(child.size, size);
-       //         return;
-       //     }
-       // }
+        let curr_dir = self
+            .cwd_stack
+            .front()
+            .expect("Directory stack empty?")
+            .as_ref();
 
-       // // Build new node
-       // let parent = Some(Rc::clone(&self.cwd));
-       // let mut cwd_mut = Rc::make_mut(&mut self.cwd);
-       // cwd_mut
-       //     .children
-       //     .push(Rc::new(Node::new_file(name, size, parent)));
+        if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
+            println!("{} already found, returning.", name);
+            return;
+        }
+
+        println!("{:?} adding {}", curr_dir.borrow().name, name);
+        curr_dir.borrow_mut().add_child(Node::new_file(name, size));
     }
 
     pub fn from_path(path: &str) -> Result<Self, FileSystemError> {
@@ -106,35 +109,72 @@ impl FileSystem {
                 Cmd::StatDir(d) => fs.stat_dir(&d),
                 Cmd::StatFile(s, n) => fs.stat_file(&n, s),
             };
-            println!("FS is now: {:?}", fs);
         }
 
         Ok(fs)
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
+    use super::*;
+
     #[test]
     fn parse_fs() {
-        todo!();
-        //let cmds = vec!["$ cd /", "$ ls", "dir a", "1234 b.txt", "dir d"];
-        //let fs = FileSystem::from_log(&cmds);
+        let cmds = vec![
+            "$ cd /",
+            "$ ls",
+            "dir a",
+            "1234 b.txt",
+            "dir d",
+            "$ cd d",
+            "138 c.txt",
+        ];
+        let fs = FileSystem::from_log(&cmds).expect("Invalid filesystem log");
 
-        //assert!(fs.is_ok());
-        //let fs = fs.unwrap();
+        let root = &fs.root.as_ref().borrow();
 
-        //assert_eq!(fs.root.name, "/");
+        assert_eq!(root.name, "/");
 
-        //println!("root: {:?}", fs.root);
+        println!("root: {:?}", fs.root);
 
-        //assert_eq!(fs.root.children[0].name, "a");
-        //assert_eq!(fs.root.children[0].which, NodeType::Directory);
-        //assert_eq!(fs.root.children[1].name, "b.txt");
-        //assert_eq!(fs.root.children[1].which, NodeType::File);
-        //assert_eq!(fs.root.children[2].name, "d");
-        //assert_eq!(fs.root.children[2].which, NodeType::Directory);
+        // TODO: helper for this verbosity? but borrow() drops at the end of the func, so can't return
+        assert_eq!(
+            root.get_child_by_name("a").unwrap().as_ref().borrow().which,
+            NodeType::Directory
+        );
+        assert_eq!(
+            root.get_child_by_name("b.txt")
+                .unwrap()
+                .as_ref()
+                .borrow()
+                .which,
+            NodeType::File
+        );
+        assert_eq!(
+            root.get_child_by_name("b.txt")
+                .unwrap()
+                .as_ref()
+                .borrow()
+                .size,
+            1234
+        );
+        assert_eq!(
+            root.get_child_by_name("d").unwrap().as_ref().borrow().which,
+            NodeType::Directory
+        );
+        assert_eq!(
+            root.get_child_by_name("d")
+                .unwrap()
+                .as_ref()
+                .borrow()
+                .get_child_by_name("c.txt")
+                .unwrap()
+                .as_ref()
+                .borrow()
+                .which,
+            NodeType::File
+        );
     }
 }

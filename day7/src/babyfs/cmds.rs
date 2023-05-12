@@ -1,4 +1,3 @@
-
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -9,7 +8,6 @@ pub enum Cmd {
     StatDir(String),
     StatFile(usize, String),
 }
-
 
 impl Cmd {
     pub fn parse(line: &str) -> Self {
@@ -42,7 +40,6 @@ impl Cmd {
         panic!("Could not parse command: {}", line);
     }
 }
-
 
 #[cfg(test)]
 mod tests {

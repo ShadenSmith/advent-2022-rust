@@ -1,4 +1,3 @@
-
 use std::error::Error;
 use std::fmt;
 
@@ -16,6 +15,8 @@ impl Error for FileSystemError {}
 
 impl FileSystemError {
     pub fn new(msg: &str) -> Self {
-        FileSystemError { msg: String::from(msg) }
+        FileSystemError {
+            msg: String::from(msg),
+        }
     }
 }
