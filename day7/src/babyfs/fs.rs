@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use std::borrow::Borrow;
 
 use std::fs::File;
-use std::io::{read_to_string, BufReader};
+use std::io::{BufRead, BufReader};
 
 use crate::babyfs::cmds::Cmd;
 use crate::babyfs::error::FileSystemError;
@@ -53,8 +53,6 @@ impl FileSystem {
                 self.cwd_stack.push_front(Rc::clone(&new_cwd));
             }
         }
-
-        println!("stack is now: {:?}", self.cwd_stack.len());
     }
 
     pub fn stat_dir(&mut self, name: &str) {
@@ -65,7 +63,6 @@ impl FileSystem {
             .as_ref();
 
         if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
-            println!("{} already found, returning.", name);
             return;
         }
 
@@ -80,18 +77,17 @@ impl FileSystem {
             .as_ref();
 
         if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
-            println!("{} already found, returning.", name);
             return;
         }
 
-        println!("{:?} adding {}", curr_dir.borrow().name, name);
         curr_dir.borrow_mut().add_child(Node::new_file(name, size));
     }
 
     pub fn from_path(path: &str) -> Result<Self, FileSystemError> {
         let mut reader = BufReader::new(File::open(path).expect("File not found"));
         let mut logs = Vec::new();
-        while let Ok(line) = read_to_string(&mut reader) {
+        for line in reader.lines() {
+            let line = line.unwrap();
             logs.push(line);
         }
         Self::from_log(&logs)
@@ -101,7 +97,6 @@ impl FileSystem {
         let mut fs = Self::new();
 
         for line in log {
-            println!("Parsing: {}", line.borrow());
             let cmd = Cmd::parse(line.borrow());
             match cmd {
                 Cmd::ChangeDir(d) => fs.cd(&d),
@@ -136,8 +131,6 @@ mod tests {
         let root = &fs.root.as_ref().borrow();
 
         assert_eq!(root.name, "/");
-
-        println!("root: {:?}", fs.root);
 
         // TODO: helper for this verbosity? but borrow() drops at the end of the func, so can't return
         assert_eq!(
@@ -176,5 +169,10 @@ mod tests {
                 .which,
             NodeType::File
         );
+    }
+
+    #[test]
+    fn test_from_path() {
+        let _ = FileSystem::from_path("input_test.txt").unwrap();
     }
 }

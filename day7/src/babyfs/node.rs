@@ -51,6 +51,13 @@ impl Node {
     pub fn add_child(&mut self, node: RcRef<Node>) {
         self.children.push(Rc::clone(&node));
     }
+
+    pub fn get_size(&self) -> usize {
+        match self.which {
+            NodeType::File => self.size,
+            NodeType::Directory => self.children.iter().map(|n| n.borrow().get_size()).sum(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -71,7 +78,6 @@ mod tests {
     #[test]
     fn test_node_add() {
         let root = Node::new_dir("/");
-
         {
             let mut mut_root = root.borrow_mut();
             mut_root.add_child(Node::new_file("Barnacle", 8));
@@ -86,6 +92,31 @@ mod tests {
                 .borrow()
                 .size,
             8
+        );
+    }
+
+    #[test]
+    fn test_dir_size() {
+        let root = Node::new_dir("/");
+        {
+            let mut mut_root = root.borrow_mut();
+            mut_root.add_child(Node::new_file("Barnacle", 8));
+            mut_root.add_child(Node::new_dir("Beluga"));
+            mut_root
+                .get_child_by_name("Beluga")
+                .unwrap()
+                .borrow_mut()
+                .add_child(Node::new_file("Cheeto", 2));
+        }
+
+        assert_eq!(root.borrow().get_size(), 10);
+        assert_eq!(
+            root.borrow()
+                .get_child_by_name("Beluga")
+                .unwrap()
+                .borrow()
+                .get_size(),
+            2
         );
     }
 }
