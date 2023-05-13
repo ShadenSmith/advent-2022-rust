@@ -118,6 +118,5 @@ mod tests {
                 .get_size(),
             2
         );
-    
     }
 }

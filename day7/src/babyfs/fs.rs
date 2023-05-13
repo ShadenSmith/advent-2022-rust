@@ -106,7 +106,6 @@ impl FileSystem {
     }
 
     pub fn part1(&self) -> usize {
-
         0
     }
 }
