@@ -26,10 +26,6 @@ impl FileSystem {
         }
     }
 
-    pub fn get_cwd(&self) -> RcRef<Node> {
-        Rc::clone(self.cwd_stack.front().expect("No directory set."))
-    }
-
     pub fn cd(&mut self, name: &str) {
         match name {
             "/" => {
@@ -62,7 +58,7 @@ impl FileSystem {
             .expect("Directory stack empty?")
             .as_ref();
 
-        if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
+        if curr_dir.borrow().get_child_by_name(name).is_ok() {
             return;
         }
 
@@ -76,7 +72,7 @@ impl FileSystem {
             .expect("Directory stack empty?")
             .as_ref();
 
-        if let Ok(_) = curr_dir.borrow().get_child_by_name(name) {
+        if curr_dir.borrow().get_child_by_name(name).is_ok() {
             return;
         }
 
@@ -84,7 +80,7 @@ impl FileSystem {
     }
 
     pub fn from_path(path: &str) -> Result<Self, FileSystemError> {
-        let mut reader = BufReader::new(File::open(path).expect("File not found"));
+        let reader = BufReader::new(File::open(path).expect("File not found"));
         let mut logs = Vec::new();
         for line in reader.lines() {
             let line = line.unwrap();
@@ -107,6 +103,11 @@ impl FileSystem {
         }
 
         Ok(fs)
+    }
+
+    pub fn part1(&self) -> usize {
+
+        0
     }
 }
 

@@ -22,7 +22,7 @@ impl Cmd {
             return Cmd::ChangeDir(cap.get(1).unwrap().as_str().to_string());
         }
 
-        if let Some(cap) = RE_LIST_DIR.captures(line) {
+        if RE_LIST_DIR.captures(line).is_some() {
             return Cmd::ListDir;
         }
 

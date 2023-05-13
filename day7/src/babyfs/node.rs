@@ -33,7 +33,7 @@ impl Node {
         Rc::new(RefCell::new(Node {
             which: NodeType::File,
             name: name.to_string(),
-            size: size,
+            size,
             children: vec![],
         }))
     }
@@ -41,7 +41,7 @@ impl Node {
     pub fn get_child_by_name(&self, name: &str) -> Result<RcRef<Self>, FileSystemError> {
         for c in &self.children {
             if c.borrow().name == name {
-                return Ok(Rc::clone(&c));
+                return Ok(Rc::clone(c));
             }
         }
 
@@ -118,5 +118,6 @@ mod tests {
                 .get_size(),
             2
         );
+    
     }
 }

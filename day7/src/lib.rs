@@ -8,6 +8,6 @@ mod tests {
     #[test]
     fn test_part1() {
         let fs = FileSystem::from_path("input_test.txt").unwrap();
-        todo!();
+        assert_eq!(fs.part1(), 95437);
     }
 }
