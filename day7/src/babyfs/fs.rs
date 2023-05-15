@@ -106,7 +106,12 @@ impl FileSystem {
     }
 
     pub fn part1(&self) -> usize {
+        // Find the sum of all directories whose size is at most 100K
+        // Note: nested directories are counted multiple times.
+
+        
         0
+
     }
 }
 

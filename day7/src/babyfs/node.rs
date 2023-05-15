@@ -58,6 +58,14 @@ impl Node {
             NodeType::Directory => self.children.iter().map(|n| n.borrow().get_size()).sum(),
         }
     }
+
+    pub fn fill_dir_sizes(&mut self) -> usize {
+        self.size = match self.which {
+            NodeType::File => self.size,
+            NodeType::Directory => self.children.iter().map(|n| n.borrow_mut().fill_dir_sizes()).sum(),
+        };
+        self.size
+    }
 }
 
 #[cfg(test)]
@@ -110,12 +118,14 @@ mod tests {
         }
 
         assert_eq!(root.borrow().get_size(), 10);
+        assert_eq!(root.borrow_mut().fill_dir_sizes(), 10);
+        assert_eq!(root.borrow().size, 10);
         assert_eq!(
             root.borrow()
                 .get_child_by_name("Beluga")
                 .unwrap()
                 .borrow()
-                .get_size(),
+                .size,
             2
         );
     }
