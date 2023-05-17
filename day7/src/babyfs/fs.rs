@@ -118,6 +118,22 @@ impl FileSystem {
             .filter(|size| *size < 100_000)
             .sum()
     }
+
+    pub fn part2(&self) -> usize {
+        // Find the the smallest directory
+
+        let dir_sizes = self.root.as_ref().borrow().get_dir_sizes();
+
+        let free_space = 70_000_000 - dir_sizes[0]; // [0] is top-level, largest dir
+        let min_free = 30_000_000;
+        let to_free = min_free - free_space;
+
+        dir_sizes
+            .into_iter()
+            .filter(|size| *size >= to_free)
+            .min()
+            .unwrap()
+    }
 }
 
 #[cfg(test)]
