@@ -9,7 +9,7 @@ use std::io::{BufRead, BufReader};
 
 use crate::babyfs::cmds::Cmd;
 use crate::babyfs::error::FileSystemError;
-use crate::babyfs::node::{Node, NodeType, RcRef};
+use crate::babyfs::node::{Node, RcRef};
 
 #[derive(Debug)]
 pub struct FileSystem {
@@ -102,16 +102,21 @@ impl FileSystem {
             };
         }
 
+        fs.root.borrow_mut().fill_dir_sizes();
+
         Ok(fs)
     }
 
     pub fn part1(&self) -> usize {
         // Find the sum of all directories whose size is at most 100K
         // Note: nested directories are counted multiple times.
-
-        
-        0
-
+        self.root
+            .as_ref()
+            .borrow()
+            .get_dir_sizes()
+            .into_iter()
+            .filter(|size| *size < 100_000)
+            .sum()
     }
 }
 
@@ -119,6 +124,7 @@ impl FileSystem {
 mod tests {
 
     use super::*;
+    use crate::babyfs::node::NodeType;
 
     #[test]
     fn parse_fs() {

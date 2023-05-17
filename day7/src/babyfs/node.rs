@@ -52,19 +52,32 @@ impl Node {
         self.children.push(Rc::clone(&node));
     }
 
-    pub fn get_size(&self) -> usize {
-        match self.which {
-            NodeType::File => self.size,
-            NodeType::Directory => self.children.iter().map(|n| n.borrow().get_size()).sum(),
-        }
-    }
-
     pub fn fill_dir_sizes(&mut self) -> usize {
         self.size = match self.which {
             NodeType::File => self.size,
-            NodeType::Directory => self.children.iter().map(|n| n.borrow_mut().fill_dir_sizes()).sum(),
+            NodeType::Directory => self
+                .children
+                .iter()
+                .map(|n| n.borrow_mut().fill_dir_sizes())
+                .sum(),
         };
         self.size
+    }
+
+    pub fn get_dir_sizes(&self) -> Vec<usize> {
+        match self.which {
+            NodeType::Directory => {
+                let mut my = vec![self.size];
+                let recurse_dirs: Vec<usize> = self
+                    .children
+                    .iter()
+                    .flat_map(|c| c.borrow().get_dir_sizes())
+                    .collect();
+                my.extend(recurse_dirs);
+                my
+            }
+            NodeType::File => vec![],
+        }
     }
 }
 
@@ -117,7 +130,6 @@ mod tests {
                 .add_child(Node::new_file("Cheeto", 2));
         }
 
-        assert_eq!(root.borrow().get_size(), 10);
         assert_eq!(root.borrow_mut().fill_dir_sizes(), 10);
         assert_eq!(root.borrow().size, 10);
         assert_eq!(
@@ -128,5 +140,24 @@ mod tests {
                 .size,
             2
         );
+    }
+
+    #[test]
+    fn test_get_dir_sizes() {
+        let root = Node::new_dir("/");
+        {
+            let mut mut_root = root.borrow_mut();
+            mut_root.add_child(Node::new_file("Barnacle", 8));
+            mut_root.add_child(Node::new_dir("Beluga"));
+            mut_root
+                .get_child_by_name("Beluga")
+                .unwrap()
+                .borrow_mut()
+                .add_child(Node::new_file("Cheeto", 2));
+        }
+
+        root.borrow_mut().fill_dir_sizes();
+
+        assert_eq!(root.borrow().get_dir_sizes(), vec![10, 2]);
     }
 }
