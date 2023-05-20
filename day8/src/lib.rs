@@ -1,4 +1,3 @@
-
 mod heightmap;
 
 #[cfg(test)]
