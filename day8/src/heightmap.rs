@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -84,6 +85,46 @@ impl HeightMap {
 
         let num = marker.into_iter().filter(|v| *v).count();
         num.try_into().unwrap()
+    }
+
+    fn scenic_score(&self, row: usize, col: usize) -> u32 {
+        let left = (0..col).map(|c| self.get(row, c)).rev();
+        let right = (col + 1..self.heights[row].len()).map(|c| self.get(row, c));
+        let top = (0..row).map(|r| self.get(r, col)).rev();
+        let bot = (row + 1..self.heights.len()).map(|r| self.get(r, col));
+
+        let my_height = self.get(row, col);
+
+        let count_fn = |h_iter: Vec<u32>| {
+            let mut num_vis = 0;
+            for h in h_iter.into_iter() {
+                num_vis += 1;
+                if h >= my_height {
+                    return num_vis;
+                }
+            }
+            num_vis
+        };
+
+        let scenic_counts = vec![
+            count_fn(left.collect_vec()),
+            count_fn(right.collect_vec()),
+            count_fn(top.collect_vec()),
+            count_fn(bot.collect_vec()),
+        ];
+
+        scenic_counts.into_iter().product()
+    }
+
+    pub fn max_scenic(&self) -> u32 {
+        let mut scores = vec![];
+        for row in 0..self.heights.len() {
+            for col in 0..self.heights[row].len() {
+                scores.push(self.scenic_score(row, col));
+            }
+        }
+
+        scores.into_iter().max().unwrap()
     }
 }
 
