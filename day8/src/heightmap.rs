@@ -34,68 +34,56 @@ impl HeightMap {
         self.heights[row][col]
     }
 
-    pub fn count_visible_trees(&self) -> usize {
-        // -4 to avoid double counting corners
-        let edge_count = (self.num_rows * 2) + (self.num_cols * 2) - 2;
-
-        // Initialize each tree as visible
-        let mut marker: Vec<Vec<bool>> = vec![];
-        for _ in 0..self.num_rows {
-            let mut rowmarker = vec![];
-            rowmarker.resize(self.num_cols, false);
-            marker.push(rowmarker);
+    fn is_visible(&self, row: usize, col: usize) -> bool {
+        if row == 0 || row == self.heights.len() - 1 {
+            return true;
         }
 
-        // Now go over interior trees in each direction and mark when a tree becomes invisible
-        // left -> right
-        for row in 1..marker.len() - 1 {
-            let mut max_seen = self.get(row, 0);
-            for col in 1..self.num_cols - 1 {
-                if self.get(row, col) > max_seen {
-                    marker[row][col] = true;
-                    max_seen = self.get(row, col);
-                }
+        if col == 0 || col == self.heights[row].len() - 1 {
+            return true;
+        }
+
+        let my_height = self.get(row, col);
+
+        // Check row
+        let left = &self.heights[row][0..col];
+        if left.iter().all(|h| h < &my_height) {
+            return true;
+        }
+
+        let right = &self.heights[row][col + 1..self.heights[row].len()];
+        if right.iter().all(|h| h < &my_height) {
+            return true;
+        }
+
+        let top = (0..row).map(|r| self.get(r, col)).all(|h| h < my_height);
+        if top {
+            return true;
+        }
+
+        let bot = (row + 1..self.heights.len())
+            .map(|r| self.get(r, col))
+            .all(|h| h < my_height);
+        if bot {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn count_visible_trees(&self) -> u32 {
+        // with NxN grid, this is O(N^3)
+        // TODO: O(N^2) algo via linear passes in each direction
+        let mut marker: Vec<bool> = vec![];
+
+        for row in 0..self.heights.len() {
+            for col in 0..self.heights[row].len() {
+                marker.push(self.is_visible(row, col));
             }
         }
 
-        // right -> left
-        for row in 1..marker.len() - 1 {
-            let mut max_seen = self.get(row, self.num_cols - 1);
-            for col in self.num_cols - 1..0 {
-                if self.get(row, col) > max_seen {
-                    marker[row][col] = true;
-                    max_seen = self.get(row, col);
-                }
-            }
-        }
-
-        // top -> bottom
-        for col in 1..self.num_cols - 1 {
-            let mut max_seen = self.get(0, col);
-            for row in 1..marker.len() - 1 {
-                if self.get(row, col) > max_seen {
-                    marker[row][col] = true;
-                    max_seen = self.get(row, col);
-                }
-            }
-        }
-
-        // bottom -> top
-        for col in 1..self.num_cols - 1 {
-            let mut max_seen = self.get(self.num_rows - 1, col);
-            for row in marker.len() - 1..0 {
-                if self.get(row, col) > max_seen {
-                    marker[row][col] = true;
-                    max_seen = self.get(row, col);
-                }
-            }
-        }
-
-        let interior: usize = marker
-            .iter()
-            .map(|row| row.iter().filter(|v| **v).count())
-            .sum();
-        edge_count + interior
+        let num = marker.into_iter().filter(|v| *v).count();
+        num.try_into().unwrap()
     }
 }
 
