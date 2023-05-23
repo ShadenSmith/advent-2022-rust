@@ -68,7 +68,7 @@ impl Coord {
     }
 
     pub fn is_touching(&self, other: &Self) -> bool {
-        let g = self.grad(&other);
+        let g = self.grad(other);
 
         // abs(x) < 2 and abs(y) < 2
         (-1..2).contains(&g.x) && (-1..2).contains(&g.y)
@@ -76,7 +76,7 @@ impl Coord {
 
     fn follow(&self, &head: &Self) -> Self {
         if self.is_touching(&head) {
-            return self.clone();
+            return *self;
         }
 
         let clamp = |v| {
@@ -90,7 +90,7 @@ impl Coord {
         };
         let grad = (clamp(head.x - self.x), clamp(head.y - self.y));
 
-        return self.translate(grad.0, grad.1);
+        self.translate(grad.0, grad.1)
     }
 }
 
@@ -102,7 +102,7 @@ pub fn parse_sim(path: &str) -> Vec<Move> {
     for line in reader.lines() {
         // Ex: D 4
         let line = line.unwrap();
-        let line: Vec<&str> = line.split(" ").collect();
+        let line: Vec<&str> = line.split(' ').collect();
         let dir = Move::parse(line[0]);
         let count = line[1].parse::<u64>().unwrap();
 
@@ -114,23 +114,23 @@ pub fn parse_sim(path: &str) -> Vec<Move> {
     moves
 }
 
-pub fn count_tail_positions(sim_cmds: &Vec<Move>) -> u64 {
+pub fn count_tail_positions(sim_cmds: &[Move]) -> u64 {
     let mut head = Coord::origin();
     let mut tail = Coord::origin();
 
     let mut tail_seen = HashSet::new();
-    tail_seen.insert(tail.clone());
+    tail_seen.insert(tail);
 
     for cmd in sim_cmds.iter() {
         head = head.step(cmd);
         tail = tail.follow(&head);
-        tail_seen.insert(tail.clone());
+        tail_seen.insert(tail);
     }
 
     tail_seen.len().try_into().unwrap()
 }
 
-pub fn count_tail_positions_in_chain(sim_cmds: &Vec<Move>, chain_size: usize) -> u64 {
+pub fn count_tail_positions_in_chain(sim_cmds: &[Move], chain_size: usize) -> u64 {
     let mut chain = Vec::new();
     for _ in 0..chain_size {
         chain.push(Coord::origin());
@@ -140,14 +140,14 @@ pub fn count_tail_positions_in_chain(sim_cmds: &Vec<Move>, chain_size: usize) ->
     let tail_idx = chain.len() - 1;
 
     let mut tail_seen = HashSet::new();
-    tail_seen.insert(chain[tail_idx].clone());
+    tail_seen.insert(chain[tail_idx]);
 
     for cmd in sim_cmds.iter() {
         chain[head_idx] = chain[head_idx].step(cmd);
         for idx in 1..chain.len() {
             chain[idx] = chain[idx].follow(&chain[idx - 1]);
         }
-        tail_seen.insert(chain[tail_idx].clone());
+        tail_seen.insert(chain[tail_idx]);
     }
 
     tail_seen.len().try_into().unwrap()
