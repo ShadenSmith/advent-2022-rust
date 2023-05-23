@@ -1,9 +1,7 @@
 mod rope_sim;
 
-use rope_sim::RopeSim;
-
 pub fn main() {
-    let sim = RopeSim::from_path("input_test.txt");
-    println!("Part 1: {}", sim.count_tail_positions());
-    println!("Part 2: {}", 0);
+    let sim = rope_sim::parse_sim("day9/input.txt");
+    println!("Part 1: {}", rope_sim::count_tail_positions(&sim));
+    println!("Part 2: {}", rope_sim::count_tail_positions_in_chain(&sim, 10));
 }
