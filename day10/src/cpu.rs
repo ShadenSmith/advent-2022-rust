@@ -63,15 +63,17 @@ impl ElfCPU {
     }
 
     pub fn parse_and_execute(path: &Path) -> Result<Self> {
-
         let input_fd = File::open(path)?;
+
+        let mut cpu = ElfCPU::new();
 
         let reader = BufReader::new(&input_fd);
         for line in reader.lines() {
-            let inst = ElfInst::parse(&line.unwrap());
+            let inst = ElfInst::parse(&line.unwrap())?;
+            cpu.execute(inst);
         }
 
-        todo!();
+        Ok(cpu)
     }
 
 }
@@ -124,7 +126,7 @@ mod tests {
     #[test]
     fn test_cpu_exec_file() {
         let mut cpu = ElfCPU::parse_and_execute(Path::new("test_inputs/basic.txt")).unwrap();
-        assert_eq!(cpu.cycles(), 2);
-        assert_eq!(cpu.x(), 4);
+        assert_eq!(cpu.cycles(), 5);
+        assert_eq!(cpu.x(), -1);
     }
 }
