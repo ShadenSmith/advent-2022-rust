@@ -1,6 +1,5 @@
-
 use std::fs::File;
-use std::io::{BufRead,BufReader, Result};
+use std::io::{BufRead, BufReader, Result};
 use std::path::Path;
 
 pub enum ElfInst {
@@ -10,15 +9,15 @@ pub enum ElfInst {
 
 impl ElfInst {
     pub fn parse(inp: &str) -> Result<Self> {
-        let cmd_parts : Vec<&str> = inp.split(" ").collect();
+        let cmd_parts: Vec<&str> = inp.split(" ").collect();
         match cmd_parts[0] {
-            "addx" => { 
+            "addx" => {
                 let val: i64 = cmd_parts[1].parse().unwrap();
-                Ok(Self::AddX(val)) 
-            },
-            "noop" => { Ok(Self::NoOp)}
-            _ => panic!("Could not parse {}", inp)
-        } 
+                Ok(Self::AddX(val))
+            }
+            "noop" => Ok(Self::NoOp),
+            _ => panic!("Could not parse {}", inp),
+        }
     }
 }
 
@@ -27,12 +26,16 @@ type Register = i64;
 pub struct ElfCPU {
     reg_x: Register,
     cycle_count: usize,
+    signal_strengths: Vec<(usize, Register)>,
 }
 
 impl ElfCPU {
-
     pub fn new() -> Self {
-        Self { reg_x: 1, cycle_count: 0 }
+        Self {
+            reg_x: 1,
+            cycle_count: 0,
+            signal_strengths: vec![],
+        }
     }
 
     pub fn cycles(&self) -> usize {
@@ -40,7 +43,19 @@ impl ElfCPU {
     }
 
     pub fn step_cycles(&mut self, cycle_count: usize) {
-        self.cycle_count += cycle_count;
+
+        for _ in 0..cycle_count {
+            self.cycle_count += 1;
+
+            if self.cycle_count >= 20 && (self.cycle_count - 20) % 40 == 0 {
+                self.signal_strengths.push((self.cycles(), self.x()));
+            }
+
+        }
+    }
+
+    pub fn signal_strengths(&self) -> Vec<(usize, Register)> {
+        self.signal_strengths.clone()
     }
 
     pub fn x(&self) -> Register {
@@ -56,8 +71,8 @@ impl ElfCPU {
         match instruction {
             ElfInst::NoOp => self.step_cycles(1),
             ElfInst::AddX(val) => {
-                self.set_x(self.x() + val);
                 self.step_cycles(2);
+                self.set_x(self.x() + val);
             }
         }
     }
@@ -76,9 +91,14 @@ impl ElfCPU {
         Ok(cpu)
     }
 
+    pub fn part1(&self) -> i64 {
+        println!("signals: {:?}", self.signal_strengths());
+        self.signal_strengths()
+            .into_iter()
+            .map(|(cyc, reg)| -> i64 { reg * <usize as TryInto<i64>>::try_into(cyc).unwrap() })
+            .sum()
+    }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -110,7 +130,6 @@ mod tests {
         assert_eq!(cpu.cycles(), 4);
         assert_eq!(cpu.x(), 3);
     }
-
 
     #[test]
     fn test_cpu_exec_addx_noop() {
