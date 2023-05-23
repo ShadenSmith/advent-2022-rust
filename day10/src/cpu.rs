@@ -43,14 +43,12 @@ impl ElfCPU {
     }
 
     pub fn step_cycles(&mut self, cycle_count: usize) {
-
         for _ in 0..cycle_count {
             self.cycle_count += 1;
 
             if self.cycle_count >= 20 && (self.cycle_count - 20) % 40 == 0 {
                 self.signal_strengths.push((self.cycles(), self.x()));
             }
-
         }
     }
 
@@ -92,7 +90,6 @@ impl ElfCPU {
     }
 
     pub fn part1(&self) -> i64 {
-        println!("signals: {:?}", self.signal_strengths());
         self.signal_strengths()
             .into_iter()
             .map(|(cyc, reg)| -> i64 { reg * <usize as TryInto<i64>>::try_into(cyc).unwrap() })
