@@ -39,6 +39,10 @@ impl ElfCPU {
         self.cycle_count
     }
 
+    pub fn step_cycles(&mut self, cycle_count: usize) {
+        self.cycle_count += cycle_count;
+    }
+
     pub fn x(&self) -> Register {
         self.reg_x
     }
@@ -49,7 +53,13 @@ impl ElfCPU {
     }
 
     pub fn execute(&mut self, instruction: ElfInst) {
-
+        match instruction {
+            ElfInst::NoOp => self.step_cycles(1),
+            ElfInst::AddX(val) => {
+                self.set_x(self.x() + val);
+                self.step_cycles(2);
+            }
+        }
     }
 
     pub fn parse_and_execute(path: &Path) -> Result<Self> {
