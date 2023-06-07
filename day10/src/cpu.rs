@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_cpu_exec_file() {
-        let mut cpu = ElfCPU::parse_and_execute(Path::new("test_inputs/basic.txt")).unwrap();
+        let cpu = ElfCPU::parse_and_execute(Path::new("test_inputs/basic.txt")).unwrap();
         assert_eq!(cpu.cycles(), 5);
         assert_eq!(cpu.x(), -1);
     }
