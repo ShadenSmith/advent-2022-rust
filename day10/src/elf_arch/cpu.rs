@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Result};
 use std::path::Path;
 
+use crate::elf_arch::crt;
+
 pub enum ElfInst {
     AddX(i64),
     NoOp,
@@ -27,6 +29,7 @@ pub struct ElfCPU {
     reg_x: Register,
     cycle_count: usize,
     signal_strengths: Vec<(usize, Register)>,
+    crt: crt::ElfCRT,
 }
 
 impl ElfCPU {
@@ -35,6 +38,7 @@ impl ElfCPU {
             reg_x: 1,
             cycle_count: 0,
             signal_strengths: vec![],
+            crt: crt::ElfCRT::new(),
         }
     }
 
@@ -45,6 +49,8 @@ impl ElfCPU {
     pub fn step_cycles(&mut self, cycle_count: usize) {
         for _ in 0..cycle_count {
             self.cycle_count += 1;
+
+            self.crt.tick(self.x());
 
             if self.cycle_count >= 20 && (self.cycle_count - 20) % 40 == 0 {
                 self.signal_strengths.push((self.cycles(), self.x()));
@@ -94,6 +100,16 @@ impl ElfCPU {
             .into_iter()
             .map(|(cyc, reg)| -> i64 { reg * <usize as TryInto<i64>>::try_into(cyc).unwrap() })
             .sum()
+    }
+
+    pub fn render_display(&self) {
+        self.crt.draw()
+    }
+}
+
+impl<'a> ElfCPU {
+    pub fn get_display(&'a self) -> &'a Vec<String> {
+        self.crt.get_display()
     }
 }
 

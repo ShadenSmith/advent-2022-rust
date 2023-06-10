@@ -1,9 +1,9 @@
-pub mod cpu;
-pub mod crt;
+
+pub mod elf_arch;
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::ElfCPU;
+    use elf_arch::cpu::ElfCPU;
 
     use std::path::Path;
 
@@ -26,6 +26,10 @@ mod tests {
             "#######.......#######.......#######.....",
         ];
 
-        todo!();
+        let cpu = ElfCPU::parse_and_execute(Path::new("input_test.txt")).unwrap();
+
+        for idx in 0..cpu.get_display().len() {
+            assert_eq!(cpu.get_display()[idx], gold[idx]);
+        }
     }
 }
