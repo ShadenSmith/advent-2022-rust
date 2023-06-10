@@ -11,7 +11,7 @@ impl ElfCRT {
     pub fn new() -> Self {
         let mut disp = vec![];
         for _row in 0..6 {
-            let mut line = String::new();
+            let line = String::new();
             disp.push(line);
         }
         ElfCRT {
