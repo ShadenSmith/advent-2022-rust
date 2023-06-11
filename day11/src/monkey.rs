@@ -209,6 +209,10 @@ impl MonkeySystem {
         let ls_refs: Vec<&str> = ls.iter().map(|s| -> &str { s }).collect();
         MonkeySystem::from_notes(&ls_refs)
     }
+
+    pub fn monkey_business(&mut self, rounds: usize) -> usize {
+        0
+    }
 }
 
 impl<'a> MonkeySystem {
@@ -287,5 +291,11 @@ mod tests {
         assert_eq!(ms.get(3).inspection.div_test.0, 17);
         assert_eq!(ms.get(3).inspection.destinations.0, 0);
         assert_eq!(ms.get(3).inspection.destinations.1, 1);
+    }
+
+    #[test]
+    fn test_part_1() {
+        let mut ms = MonkeySystem::from_path("inputs/test_part1.txt");
+        assert_eq!(ms.monkey_business(20), 10605);
     }
 }
