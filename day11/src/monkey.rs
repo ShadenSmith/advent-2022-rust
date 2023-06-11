@@ -51,7 +51,7 @@ impl ItemInspection {
             InspectOperand::Val(x) => x.clone(),
         };
         let right = match &self.operands.1 {
-            InspectOperand::Old => old.clone(),
+            InspectOperand::Old => old,
             InspectOperand::Val(x) => x.clone(),
         };
 
@@ -67,7 +67,7 @@ impl ItemInspection {
                 Regex::new(r#"\w*Operation: new = (.+) (.+) (.+)"#).expect("Invalid regex.");
         }
 
-        let cap = INSPECT_OP_RE.captures(&line).unwrap();
+        let cap = INSPECT_OP_RE.captures(line).unwrap();
 
         let op = InspectOp::parse(cap.get(2).as_ref().unwrap().as_str());
         let left = InspectOperand::parse(cap.get(1).as_ref().unwrap().as_str());
@@ -83,7 +83,7 @@ impl ItemInspection {
         }
 
         let cap = RE
-            .captures(&line)
+            .captures(line)
             .expect("Could not parse divisibility test");
 
         Worry(
@@ -121,8 +121,8 @@ impl ItemInspection {
     }
 
     pub fn from_notes(lines: &[&str]) -> Self {
-        let (op, operands) = ItemInspection::parse_operation(&lines[0]);
-        let div_test = ItemInspection::parse_div_test(&lines[1]);
+        let (op, operands) = ItemInspection::parse_operation(lines[0]);
+        let div_test = ItemInspection::parse_div_test(lines[1]);
         let destinations = ItemInspection::parse_destinations(&lines[2..=3]);
 
         ItemInspection {
@@ -132,7 +132,6 @@ impl ItemInspection {
             destinations,
         }
     }
-
 }
 
 #[derive(Debug)]
@@ -152,11 +151,10 @@ impl Monkey {
     fn parse_item_log(log_line: &str) -> Vec<Worry> {
         let items_reg = Regex::new(r#"\w*Starting items: (.*)"#).unwrap();
 
-        let cap = items_reg.captures(&log_line).unwrap();
+        let cap = items_reg.captures(log_line).unwrap();
         let item_str = cap.get(1).as_ref().unwrap().as_str();
         let items = item_str
             .split(", ")
-            .into_iter()
             .map(|s| Worry(s.parse::<i64>().unwrap()))
             .collect();
         items
@@ -164,7 +162,7 @@ impl Monkey {
 
     pub fn from_notes(notes: &[&str]) -> Self {
         Monkey::new(
-            &Monkey::parse_item_log(&notes[0]),
+            &Monkey::parse_item_log(notes[0]),
             ItemInspection::from_notes(&notes[1..notes.len()]),
         )
     }
@@ -177,7 +175,6 @@ impl Monkey {
 struct MonkeySystem {
     monkeys: Vec<Monkey>,
 }
-
 
 impl MonkeySystem {
     pub fn default() -> Self {
@@ -193,7 +190,7 @@ impl MonkeySystem {
                 panic!("too few lines!");
             }
 
-            monkeys.push(Monkey::from_notes(&lines[idx..idx+Monkey::notes_len()]));
+            monkeys.push(Monkey::from_notes(&lines[idx..idx + Monkey::notes_len()]));
 
             idx += Monkey::notes_len();
             idx += 1; // empty line
@@ -204,15 +201,14 @@ impl MonkeySystem {
 
     pub fn from_path(path: &str) -> Self {
         use std::fs::File;
-        use std::io::{BufRead,BufReader};
+        use std::io::{BufRead, BufReader};
 
         let reader = BufReader::new(File::open(path).expect("Could not open file."));
 
-        let ls = reader.lines().into_iter().map(|l| l.unwrap()).collect::<Vec<_>>();
-        let ls_refs: Vec<&str> = ls.iter().map(|s| -> &str {&s} ).collect();
+        let ls = reader.lines().map(|l| l.unwrap()).collect::<Vec<_>>();
+        let ls_refs: Vec<&str> = ls.iter().map(|s| -> &str { s }).collect();
         MonkeySystem::from_notes(&ls_refs)
     }
-
 }
 
 impl<'a> MonkeySystem {
@@ -220,9 +216,6 @@ impl<'a> MonkeySystem {
         &self.monkeys[idx]
     }
 }
-
-
-
 
 #[cfg(test)]
 mod tests {
@@ -250,20 +243,28 @@ mod tests {
 
     #[test]
     fn monkey_system_parse() {
-
         let ms = MonkeySystem::from_path("inputs/test_part1.txt");
         assert_eq!(ms.get(0).items, vec![Worry(79), Worry(98)]);
         assert_eq!(ms.get(0).inspection.op, InspectOp::Mul);
         assert_eq!(ms.get(0).inspection.operands.0, InspectOperand::Old);
-        assert_eq!(ms.get(0).inspection.operands.1, InspectOperand::Val(Worry(19)));
+        assert_eq!(
+            ms.get(0).inspection.operands.1,
+            InspectOperand::Val(Worry(19))
+        );
         assert_eq!(ms.get(0).inspection.div_test.0, 23);
         assert_eq!(ms.get(0).inspection.destinations.0, 2);
         assert_eq!(ms.get(0).inspection.destinations.1, 3);
 
-        assert_eq!(ms.get(1).items, vec![Worry(54), Worry(65), Worry(75), Worry(74)]);
+        assert_eq!(
+            ms.get(1).items,
+            vec![Worry(54), Worry(65), Worry(75), Worry(74)]
+        );
         assert_eq!(ms.get(1).inspection.op, InspectOp::Add);
         assert_eq!(ms.get(1).inspection.operands.0, InspectOperand::Old);
-        assert_eq!(ms.get(1).inspection.operands.1, InspectOperand::Val(Worry(6)));
+        assert_eq!(
+            ms.get(1).inspection.operands.1,
+            InspectOperand::Val(Worry(6))
+        );
         assert_eq!(ms.get(1).inspection.div_test.0, 19);
         assert_eq!(ms.get(1).inspection.destinations.0, 2);
         assert_eq!(ms.get(1).inspection.destinations.1, 0);
@@ -279,7 +280,10 @@ mod tests {
         assert_eq!(ms.get(3).items, vec![Worry(74)]);
         assert_eq!(ms.get(3).inspection.op, InspectOp::Add);
         assert_eq!(ms.get(3).inspection.operands.0, InspectOperand::Old);
-        assert_eq!(ms.get(3).inspection.operands.1, InspectOperand::Val(Worry(3)));
+        assert_eq!(
+            ms.get(3).inspection.operands.1,
+            InspectOperand::Val(Worry(3))
+        );
         assert_eq!(ms.get(3).inspection.div_test.0, 17);
         assert_eq!(ms.get(3).inspection.destinations.0, 0);
         assert_eq!(ms.get(3).inspection.destinations.1, 1);
