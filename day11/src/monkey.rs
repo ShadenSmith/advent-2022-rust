@@ -1,8 +1,8 @@
 use crate::worry::Worry;
 
-use std::collections::VecDeque;
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
+use std::collections::VecDeque;
 
 #[derive(PartialEq, Debug)]
 enum InspectOperand {
@@ -62,7 +62,8 @@ impl ItemInspection {
 
     fn parse_operation(line: &str) -> (InspectOp, (InspectOperand, InspectOperand)) {
         lazy_static! {
-            static ref INSPECT_OP_RE: Regex = Regex::new(r#"\w*Operation: new = (.+) (.+) (.+)"#).expect("Invalid regex.");
+            static ref INSPECT_OP_RE: Regex =
+                Regex::new(r#"\w*Operation: new = (.+) (.+) (.+)"#).expect("Invalid regex.");
         }
 
         let cap = INSPECT_OP_RE.captures(&line).unwrap();
@@ -76,34 +77,60 @@ impl ItemInspection {
 
     fn parse_div_test(line: &str) -> Worry {
         lazy_static! {
-            static ref RE: Regex = Regex::new(r#"\w*Test: divisible by (.+)"#).expect("Invalid regex.");
+            static ref RE: Regex =
+                Regex::new(r#"\w*Test: divisible by (.+)"#).expect("Invalid regex.");
         }
 
-        let cap = RE.captures(&line).expect("Could not parse divisibility test");
+        let cap = RE
+            .captures(&line)
+            .expect("Could not parse divisibility test");
 
-        Worry(cap.get(1).as_ref().unwrap().as_str().parse::<i64>().unwrap())
+        Worry(
+            cap.get(1)
+                .as_ref()
+                .unwrap()
+                .as_str()
+                .parse::<i64>()
+                .unwrap(),
+        )
     }
 
     fn parse_destinations(lines: &[&str]) -> (usize, usize) {
-
         let t_line = lines[0];
         let f_line = lines[1];
 
-        let t_dest = t_line.split("monkey ").skip(1).take(1).last().unwrap().parse().unwrap();
-        let f_dest = f_line.split("monkey ").skip(1).take(1).last().unwrap().parse().unwrap();
+        let t_dest = t_line
+            .split("monkey ")
+            .skip(1)
+            .take(1)
+            .last()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let f_dest = f_line
+            .split("monkey ")
+            .skip(1)
+            .take(1)
+            .last()
+            .unwrap()
+            .parse()
+            .unwrap();
 
         (t_dest, f_dest)
     }
 
     pub fn from_notes(lines: &[&str]) -> Self {
-
-        let (op, operands)  = ItemInspection::parse_operation(&lines[0]);
-        let div_test  = ItemInspection::parse_div_test(&lines[1]);
+        let (op, operands) = ItemInspection::parse_operation(&lines[0]);
+        let div_test = ItemInspection::parse_div_test(&lines[1]);
         let destinations = ItemInspection::parse_destinations(&lines[2..=3]);
 
-        ItemInspection { op, operands, div_test, destinations }
+        ItemInspection {
+            op,
+            operands,
+            div_test,
+            destinations,
+        }
     }
-        
 }
 
 struct Monkey {
@@ -128,7 +155,11 @@ impl Monkey {
 
         let cap = items_reg.captures(&log_line).unwrap();
         let item_str = cap.get(1).as_ref().unwrap().as_str();
-        let items = item_str.split(", ").into_iter().map(|s| Worry(s.parse::<i64>().unwrap())).collect();
+        let items = item_str
+            .split(", ")
+            .into_iter()
+            .map(|s| Worry(s.parse::<i64>().unwrap()))
+            .collect();
         items
     }
 
