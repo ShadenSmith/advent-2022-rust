@@ -35,6 +35,7 @@ impl InspectOp {
     }
 }
 
+#[derive(Debug)]
 struct ItemInspection {
     pub op: InspectOp,
     pub operands: (InspectOperand, InspectOperand),
@@ -131,8 +132,10 @@ impl ItemInspection {
             destinations,
         }
     }
+
 }
 
+#[derive(Debug)]
 struct Monkey {
     pub items: VecDeque<Worry>,
     pub inspection: ItemInspection,
@@ -144,10 +147,6 @@ impl Monkey {
             items: items.iter().cloned().collect(),
             inspection: inspect,
         }
-    }
-
-    pub fn go(&mut self) {
-        //while let Some(worry_level) = self.items.pop_front() {
     }
 
     fn parse_item_log(log_line: &str) -> Vec<Worry> {
@@ -169,7 +168,61 @@ impl Monkey {
             ItemInspection::from_notes(&notes[1..notes.len()]),
         )
     }
+    pub fn notes_len() -> usize {
+        5
+    }
 }
+
+#[derive(Debug)]
+struct MonkeySystem {
+    monkeys: Vec<Monkey>,
+}
+
+
+impl MonkeySystem {
+    pub fn default() -> Self {
+        MonkeySystem { monkeys: vec![] }
+    }
+
+    pub fn from_notes(lines: &[&str]) -> Self {
+        let mut monkeys = vec![];
+        let mut idx = 0;
+        while idx < lines.len() {
+            idx += 1; // "Monkey: i"
+            if lines.len() - idx < Monkey::notes_len() {
+                panic!("too few lines!");
+            }
+
+            monkeys.push(Monkey::from_notes(&lines[idx..idx+Monkey::notes_len()]));
+
+            idx += Monkey::notes_len();
+            idx += 1; // empty line
+        }
+
+        MonkeySystem { monkeys }
+    }
+
+    pub fn from_path(path: &str) -> Self {
+        use std::fs::File;
+        use std::io::{BufRead,BufReader};
+
+        let reader = BufReader::new(File::open(path).expect("Could not open file."));
+
+        let ls = reader.lines().into_iter().map(|l| l.unwrap()).collect::<Vec<_>>();
+        let ls_refs: Vec<&str> = ls.iter().map(|s| -> &str {&s} ).collect();
+        MonkeySystem::from_notes(&ls_refs)
+    }
+
+}
+
+impl<'a> MonkeySystem {
+    pub fn get(&'a self, idx: usize) -> &'a Monkey {
+        &self.monkeys[idx]
+    }
+}
+
+
+
 
 #[cfg(test)]
 mod tests {
@@ -190,7 +243,45 @@ mod tests {
         assert_eq!(m.inspection.op, InspectOp::Mul);
         assert_eq!(m.inspection.operands.0, InspectOperand::Old);
         assert_eq!(m.inspection.operands.1, InspectOperand::Val(Worry(19)));
+        assert_eq!(m.inspection.div_test.0, 23);
         assert_eq!(m.inspection.destinations.0, 2);
         assert_eq!(m.inspection.destinations.1, 3);
+    }
+
+    #[test]
+    fn monkey_system_parse() {
+
+        let ms = MonkeySystem::from_path("inputs/test_part1.txt");
+        assert_eq!(ms.get(0).items, vec![Worry(79), Worry(98)]);
+        assert_eq!(ms.get(0).inspection.op, InspectOp::Mul);
+        assert_eq!(ms.get(0).inspection.operands.0, InspectOperand::Old);
+        assert_eq!(ms.get(0).inspection.operands.1, InspectOperand::Val(Worry(19)));
+        assert_eq!(ms.get(0).inspection.div_test.0, 23);
+        assert_eq!(ms.get(0).inspection.destinations.0, 2);
+        assert_eq!(ms.get(0).inspection.destinations.1, 3);
+
+        assert_eq!(ms.get(1).items, vec![Worry(54), Worry(65), Worry(75), Worry(74)]);
+        assert_eq!(ms.get(1).inspection.op, InspectOp::Add);
+        assert_eq!(ms.get(1).inspection.operands.0, InspectOperand::Old);
+        assert_eq!(ms.get(1).inspection.operands.1, InspectOperand::Val(Worry(6)));
+        assert_eq!(ms.get(1).inspection.div_test.0, 19);
+        assert_eq!(ms.get(1).inspection.destinations.0, 2);
+        assert_eq!(ms.get(1).inspection.destinations.1, 0);
+
+        assert_eq!(ms.get(2).items, vec![Worry(79), Worry(60), Worry(97)]);
+        assert_eq!(ms.get(2).inspection.op, InspectOp::Mul);
+        assert_eq!(ms.get(2).inspection.operands.0, InspectOperand::Old);
+        assert_eq!(ms.get(2).inspection.operands.1, InspectOperand::Old);
+        assert_eq!(ms.get(2).inspection.div_test.0, 13);
+        assert_eq!(ms.get(2).inspection.destinations.0, 1);
+        assert_eq!(ms.get(2).inspection.destinations.1, 3);
+
+        assert_eq!(ms.get(3).items, vec![Worry(74)]);
+        assert_eq!(ms.get(3).inspection.op, InspectOp::Add);
+        assert_eq!(ms.get(3).inspection.operands.0, InspectOperand::Old);
+        assert_eq!(ms.get(3).inspection.operands.1, InspectOperand::Val(Worry(3)));
+        assert_eq!(ms.get(3).inspection.div_test.0, 17);
+        assert_eq!(ms.get(3).inspection.destinations.0, 0);
+        assert_eq!(ms.get(3).inspection.destinations.1, 1);
     }
 }
