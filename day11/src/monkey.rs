@@ -5,7 +5,7 @@ use regex::Regex;
 use std::{borrow::BorrowMut, collections::VecDeque};
 
 #[derive(PartialEq, Debug, Clone)]
-enum InspectOperand {
+pub enum InspectOperand {
     Old,
     Val(Worry),
 }
@@ -14,13 +14,13 @@ impl InspectOperand {
     pub fn parse(token: &str) -> Self {
         match token {
             "old" => InspectOperand::Old,
-            val => InspectOperand::Val(Worry::parse(token)),
+            _ => InspectOperand::Val(Worry::parse(token)),
         }
     }
 }
 
 #[derive(PartialEq, Debug, Clone)]
-enum InspectOp {
+pub enum InspectOp {
     Add,
     Mul,
 }
@@ -36,7 +36,7 @@ impl InspectOp {
 }
 
 #[derive(Debug, Clone)]
-struct ItemInspection {
+pub struct ItemInspection {
     pub op: InspectOp,
     pub operands: (InspectOperand, InspectOperand),
 
@@ -45,7 +45,7 @@ struct ItemInspection {
 }
 
 impl ItemInspection {
-    pub fn inspect(&self, old: Worry) -> (Worry, usize) {
+    pub fn inspect(&self, old: Worry, div_level: &Worry) -> (Worry, usize) {
         let left = match &self.operands.0 {
             InspectOperand::Old => old.clone(),
             InspectOperand::Val(x) => x.clone(),
@@ -60,7 +60,7 @@ impl ItemInspection {
             InspectOp::Mul => left * right,
         };
 
-        let bored = post_op / Worry(3);
+        let bored = post_op / div_level.clone();
 
         let monkey_dest = if bored.0 % self.div_test.0 == 0 {
             self.destinations.0
@@ -145,7 +145,7 @@ impl ItemInspection {
 }
 
 #[derive(Debug)]
-struct Monkey {
+pub struct Monkey {
     pub items: VecDeque<Worry>,
     pub inspection: ItemInspection,
 }
@@ -182,7 +182,7 @@ impl Monkey {
 }
 
 #[derive(Debug)]
-struct MonkeySystem {
+pub struct MonkeySystem {
     monkeys: Vec<Monkey>,
 }
 
@@ -220,20 +220,20 @@ impl MonkeySystem {
         MonkeySystem::from_notes(&ls_refs)
     }
 
-    pub fn monkey_business(&mut self, rounds: usize) -> usize {
+    pub fn monkey_business(&mut self, rounds: usize, div_level: Worry) -> usize {
         let mut inspect_count: Vec<usize> = Vec::with_capacity(self.monkeys.len());
         for _ in 0..self.monkeys.len() {
             inspect_count.push(0);
         }
 
-        for round in 0..rounds {
+        for _round in 0..rounds {
             for curr_monkey in 0..self.monkeys.len() {
                 let inspection = self.monkeys[curr_monkey].inspection.clone();
                 while let Some(old_worry) = self.monkeys[curr_monkey].borrow_mut().items.pop_front()
                 {
                     inspect_count[curr_monkey] += 1;
 
-                    let (new_worry, dest) = inspection.inspect(old_worry);
+                    let (new_worry, dest) = inspection.inspect(old_worry, &div_level);
 
                     // send to next monkey
                     self.monkeys[dest].borrow_mut().items.push_back(new_worry);
@@ -337,6 +337,12 @@ mod tests {
     #[test]
     fn test_part_1() {
         let mut ms = MonkeySystem::from_path("inputs/test_part1.txt");
-        assert_eq!(ms.monkey_business(20), 10605);
+        assert_eq!(ms.monkey_business(20, Worry(3)), 10605);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let mut ms = MonkeySystem::from_path("inputs/test_part1.txt");
+        assert_eq!(ms.monkey_business(10_000, Worry(1)), 2713310158);
     }
 }
