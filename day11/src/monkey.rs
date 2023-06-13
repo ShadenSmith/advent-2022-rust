@@ -2,7 +2,7 @@ use crate::worry::Worry;
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{collections::VecDeque, borrow::BorrowMut};
+use std::{borrow::BorrowMut, collections::VecDeque};
 
 #[derive(PartialEq, Debug, Clone)]
 enum InspectOperand {
@@ -35,7 +35,7 @@ impl InspectOp {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct ItemInspection {
     pub op: InspectOp,
     pub operands: (InspectOperand, InspectOperand),
@@ -59,7 +59,6 @@ impl ItemInspection {
             InspectOp::Add => left + right,
             InspectOp::Mul => left * right,
         };
-
 
         let bored = post_op / Worry(3);
 
@@ -230,10 +229,11 @@ impl MonkeySystem {
         for round in 0..rounds {
             for curr_monkey in 0..self.monkeys.len() {
                 let inspection = self.monkeys[curr_monkey].inspection.clone();
-                while let Some(old_worry) = self.monkeys[curr_monkey].borrow_mut().items.pop_front() {
+                while let Some(old_worry) = self.monkeys[curr_monkey].borrow_mut().items.pop_front()
+                {
                     inspect_count[curr_monkey] += 1;
 
-                    let (new_worry, dest)  = inspection.inspect(old_worry);
+                    let (new_worry, dest) = inspection.inspect(old_worry);
 
                     // send to next monkey
                     self.monkeys[dest].borrow_mut().items.push_back(new_worry);
@@ -243,7 +243,7 @@ impl MonkeySystem {
 
         // return product of top 2 largest counts
         inspect_count.sort();
-        inspect_count[inspect_count.len()-1] * inspect_count[inspect_count.len()-2]
+        inspect_count[inspect_count.len() - 1] * inspect_count[inspect_count.len() - 2]
     }
 
     pub fn print_items(&self) {
