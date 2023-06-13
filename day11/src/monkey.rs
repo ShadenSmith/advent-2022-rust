@@ -2,9 +2,9 @@ use crate::worry::Worry;
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::VecDeque;
+use std::{collections::VecDeque, borrow::BorrowMut};
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 enum InspectOperand {
     Old,
     Val(Worry),
@@ -19,7 +19,7 @@ impl InspectOperand {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 enum InspectOp {
     Add,
     Mul,
@@ -35,7 +35,7 @@ impl InspectOp {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct ItemInspection {
     pub op: InspectOp,
     pub operands: (InspectOperand, InspectOperand),
@@ -45,7 +45,7 @@ struct ItemInspection {
 }
 
 impl ItemInspection {
-    pub fn inspect(&self, old: Worry) -> Worry {
+    pub fn inspect(&self, old: Worry) -> (Worry, usize) {
         let left = match &self.operands.0 {
             InspectOperand::Old => old.clone(),
             InspectOperand::Val(x) => x.clone(),
@@ -55,10 +55,21 @@ impl ItemInspection {
             InspectOperand::Val(x) => x.clone(),
         };
 
-        match self.op {
+        let post_op = match self.op {
             InspectOp::Add => left + right,
             InspectOp::Mul => left * right,
-        }
+        };
+
+
+        let bored = post_op / Worry(3);
+
+        let monkey_dest = if bored.0 % self.div_test.0 == 0 {
+            self.destinations.0
+        } else {
+            self.destinations.1
+        };
+
+        (bored, monkey_dest)
     }
 
     fn parse_operation(line: &str) -> (InspectOp, (InspectOperand, InspectOperand)) {
@@ -211,7 +222,37 @@ impl MonkeySystem {
     }
 
     pub fn monkey_business(&mut self, rounds: usize) -> usize {
-        0
+        let mut inspect_count: Vec<usize> = Vec::with_capacity(self.monkeys.len());
+        for _ in 0..self.monkeys.len() {
+            inspect_count.push(0);
+        }
+
+        for round in 0..rounds {
+            for curr_monkey in 0..self.monkeys.len() {
+                let inspection = self.monkeys[curr_monkey].inspection.clone();
+                while let Some(old_worry) = self.monkeys[curr_monkey].borrow_mut().items.pop_front() {
+                    inspect_count[curr_monkey] += 1;
+
+                    let (new_worry, dest)  = inspection.inspect(old_worry);
+
+                    // send to next monkey
+                    self.monkeys[dest].borrow_mut().items.push_back(new_worry);
+                }
+            }
+        }
+
+        // return product of top 2 largest counts
+        inspect_count.sort();
+        inspect_count[inspect_count.len()-1] * inspect_count[inspect_count.len()-2]
+    }
+
+    pub fn print_items(&self) {
+        for (idx, m) in self.monkeys.iter().enumerate() {
+            let items = &m.items;
+            println!("Monkey {idx}: {items:?}");
+        }
+        println!();
+        println!();
     }
 }
 
