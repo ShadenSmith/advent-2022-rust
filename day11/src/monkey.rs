@@ -227,7 +227,11 @@ impl MonkeySystem {
         }
 
         // We just want a multiple of all the div_tests
-        let global_worry_div: i64 = self.monkeys.iter().map(|m| m.inspection.div_test.0).product();
+        let global_worry_div: i64 = self
+            .monkeys
+            .iter()
+            .map(|m| m.inspection.div_test.0)
+            .product();
 
         for _round in 0..rounds {
             for curr_monkey in 0..self.monkeys.len() {
@@ -242,7 +246,10 @@ impl MonkeySystem {
                     let scaled_worry = new_worry.0 % global_worry_div;
 
                     // send to next monkey
-                    self.monkeys[dest].borrow_mut().items.push_back(Worry(scaled_worry));
+                    self.monkeys[dest]
+                        .borrow_mut()
+                        .items
+                        .push_back(Worry(scaled_worry));
                 }
             }
         }
