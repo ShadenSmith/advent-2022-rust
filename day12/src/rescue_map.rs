@@ -132,7 +132,10 @@ impl RescueMap {
                     continue;
                 }
 
-                pq.push(Reverse(SearchNode { cost: node.cost+1, state: nbr }));
+                pq.push(Reverse(SearchNode {
+                    cost: node.cost + 1,
+                    state: nbr,
+                }));
             }
         }
 
