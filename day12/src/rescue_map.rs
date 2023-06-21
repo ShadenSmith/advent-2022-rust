@@ -23,12 +23,6 @@ struct SearchNode {
     state: Coord,
 }
 
-impl SearchNode {
-    pub fn new(state: Coord, cost: usize) -> Self {
-        SearchNode { cost, state }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum MapCell {
     Start,
@@ -113,29 +107,29 @@ impl RescueMap {
         // Find start
         let start = self.find_start();
 
-        println!("start: {:?}  ", start);
-
-        let mut seen: HashSet<Coord> = HashSet::new();
+        let mut explored = HashSet::new();
 
         let mut pq = BinaryHeap::new();
-        pq.push(Reverse(SearchNode::new(start.clone(), 0)));
+        pq.push(Reverse(SearchNode {
+            state: start.clone(),
+            cost: 0,
+        }));
 
+        let mut num_seen = 0;
         while let Some(Reverse(node)) = pq.pop() {
-            seen.insert(node.state.clone());
-
             if self.get(&node.state) == MapCell::End {
                 return node.cost;
             }
 
             for nbr in self.get_reachable_from(&node.state) {
-                if seen.contains(&nbr) {
-                    continue;
-                }
+                if !explored.contains(&nbr) {
+                    pq.push(Reverse(SearchNode {
+                        cost: node.cost + 1,
+                        state: nbr.clone(),
+                    }));
 
-                pq.push(Reverse(SearchNode {
-                    cost: node.cost + 1,
-                    state: nbr,
-                }));
+                    explored.insert(nbr.clone());
+                }
             }
         }
 
