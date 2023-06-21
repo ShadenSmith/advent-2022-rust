@@ -45,8 +45,8 @@ impl MapCell {
             if src >= dst {
                 true
             } else {
-                let left = src.clone() as i32;
-                let right = dst.clone() as i32;
+                let left = *src as i32;
+                let right = *dst as i32;
                 right - left <= 1
             }
         };
@@ -134,11 +134,10 @@ impl RescueMap {
 
         let mut pq = BinaryHeap::new();
         pq.push(Reverse(SearchNode {
-            state: start.clone(),
+            state: start,
             cost: 0,
         }));
 
-        let mut num_seen = 0;
         while let Some(Reverse(node)) = pq.pop() {
             if self.get(&node.state) == MapCell::End {
                 return Some(node.cost);
@@ -176,7 +175,7 @@ impl RescueMap {
     fn get_reachable_from(&self, pos: &Coord) -> Vec<Coord> {
         let mut nbrs = Vec::new();
 
-        let curr_cell = self.get(&pos);
+        let curr_cell = self.get(pos);
 
         let mut maybe_traverse_nbr = |next_coord: Coord| {
             let next_cell = self.get(&next_coord);
