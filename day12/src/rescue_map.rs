@@ -104,9 +104,32 @@ impl RescueMap {
     }
 
     pub fn shortest_path(&self) -> usize {
-        // Find start
         let start = self.find_start();
+        self.compute_shortest_path(start)
+            .expect("No path from Start to End!")
+    }
 
+    pub fn shortest_path_scenic(&self) -> usize {
+        let mut paths: Vec<usize> = Vec::new();
+        for row in 0..self.num_rows {
+            for col in 0..self.num_cols {
+                let start = Coord::new(row, col);
+                match self.get(&start) {
+                    MapCell::Start | MapCell::Terrain('a') => {
+                        if let Some(num_steps) = self.compute_shortest_path(start) {
+                            paths.push(num_steps);
+                        }
+                    }
+                    MapCell::End => (),
+                    MapCell::Terrain(_) => (),
+                }
+            }
+        }
+
+        paths.into_iter().min().unwrap()
+    }
+
+    fn compute_shortest_path(&self, start: Coord) -> Option<usize> {
         let mut explored = HashSet::new();
 
         let mut pq = BinaryHeap::new();
@@ -118,7 +141,7 @@ impl RescueMap {
         let mut num_seen = 0;
         while let Some(Reverse(node)) = pq.pop() {
             if self.get(&node.state) == MapCell::End {
-                return node.cost;
+                return Some(node.cost);
             }
 
             for nbr in self.get_reachable_from(&node.state) {
@@ -133,7 +156,7 @@ impl RescueMap {
             }
         }
 
-        panic!("No path to end found.");
+        None
     }
 
     pub fn get(&self, coord: &Coord) -> MapCell {
