@@ -1,6 +1,34 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use std::cmp::Reverse;
+
+use std::collections::{BinaryHeap, HashSet};
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Coord {
+    row: usize,
+    col: usize,
+}
+
+impl Coord {
+    pub fn new(row: usize, col: usize) -> Self {
+        Coord { row, col }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct SearchNode {
+    cost: usize,
+    state: Coord,
+}
+
+impl SearchNode {
+    pub fn new(state: Coord, cost: usize) -> Self {
+        SearchNode { cost, state }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum MapCell {
     Start,
@@ -53,7 +81,6 @@ impl MapCell {
             MapCell::Terrain(c) => *c as i32,
         }
     }
-
 }
 
 pub struct RescueMap {
@@ -69,9 +96,6 @@ impl RescueMap {
 
         let mut parsed_heights = vec![];
 
-        let mut start = (0, 0);
-        let mut end = (0, 0);
-
         for line in reader.lines() {
             // Parse the line into a sequence of single-digit integers
             let line_heights: Vec<MapCell> = line.unwrap().chars().map(MapCell::parse).collect();
@@ -85,27 +109,79 @@ impl RescueMap {
         }
     }
 
-    pub fn get(&self, coord: (&usize, &usize)) -> MapCell {
-        self.heights[*coord.0][*coord.1].clone()
+    pub fn shortest_path(&self) -> usize {
+        // Find start
+        let start = self.find_start();
+
+        println!("start: {:?}  ", start);
+
+        let mut seen: HashSet<Coord> = HashSet::new();
+
+        let mut pq = BinaryHeap::new();
+        pq.push(Reverse(SearchNode::new(start.clone(), 0)));
+
+        while let Some(Reverse(node)) = pq.pop() {
+            seen.insert(node.state.clone());
+
+            if self.get(&node.state) == MapCell::End {
+                return node.cost;
+            }
+
+            for nbr in self.get_reachable_from(&node.state) {
+                if seen.contains(&nbr) {
+                    continue;
+                }
+
+                pq.push(Reverse(SearchNode { cost: node.cost+1, state: nbr }));
+            }
+        }
+
+        panic!("No path to end found.");
     }
 
-    fn find_start(&self) -> (usize, usize) { 
+    pub fn get(&self, coord: &Coord) -> MapCell {
+        self.heights[coord.row][coord.col].clone()
+    }
+
+    fn find_start(&self) -> Coord {
         for row in 0..self.num_rows {
             if let Some(col) = self.heights[row].iter().position(|p| *p == MapCell::Start) {
-                return (row, col)
+                return Coord::new(row, col);
             }
         }
 
         unreachable!("Start not found!")
     }
 
-    pub fn shortest_path(&self) -> usize {
-        // Find start
+    fn get_reachable_from(&self, pos: &Coord) -> Vec<Coord> {
+        let mut nbrs = Vec::new();
 
-        let start = self.find_start();
+        let curr_cell = self.get(&pos);
 
-        println!("start: {:?}", start);
+        let mut maybe_traverse_nbr = |next_coord: Coord| {
+            let next_cell = self.get(&next_coord);
+            if MapCell::is_traversable(&curr_cell, &next_cell) {
+                nbrs.push(next_coord);
+            }
+        };
 
-        0
+        if pos.row > 0 {
+            let next_coord = Coord::new(pos.row - 1, pos.col);
+            maybe_traverse_nbr(next_coord);
+        }
+        if pos.row < self.num_rows - 1 {
+            let next_coord = Coord::new(pos.row + 1, pos.col);
+            maybe_traverse_nbr(next_coord);
+        }
+        if pos.col > 0 {
+            let next_coord = Coord::new(pos.row, pos.col - 1);
+            maybe_traverse_nbr(next_coord);
+        }
+        if pos.col < self.num_cols - 1 {
+            let next_coord = Coord::new(pos.row, pos.col + 1);
+            maybe_traverse_nbr(next_coord);
+        }
+
+        nbrs
     }
 }
