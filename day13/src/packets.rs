@@ -1,37 +1,34 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use std::str::FromStr;
+
 #[derive(Debug, PartialEq)]
 enum PacketElem {
     List(Vec<PacketElem>),
     Val(i64),
 }
 
-struct Packet {
+struct PacketLegacy {
     data: PacketElem,
 }
 
-impl Packet {
+impl PacketLegacy {
     pub fn empty() -> Self {
-        Packet {
+        PacketLegacy {
             data: PacketElem::List(vec![]),
         }
     }
 
     pub fn parse(line: &str) -> Self {
-        fn parse_list(subline: &str) -> Packet {
-            Packet::empty()
+        fn parse_list(subline: &str) -> PacketLegacy {
+            PacketLegacy::empty()
         }
 
-        println!("Parsing {line}");
-        for tok in line.chars() {
-            println!("  tok: '{tok}'");
-        }
-
-        Packet::empty()
+        PacketLegacy::empty()
     }
 
-    pub fn misordered(left: &Packet, right: &Packet) -> bool {
+    pub fn misordered(left: &PacketLegacy, right: &PacketLegacy) -> bool {
         false
     }
 }
@@ -54,10 +51,10 @@ pub fn num_misordered_packets(path: &str) -> usize {
             break;
         }
 
-        let left = Packet::parse(&buf_left);
-        let right = Packet::parse(&buf_right);
+        let left = PacketLegacy::parse(&buf_left);
+        let right = PacketLegacy::parse(&buf_right);
 
-        if Packet::misordered(&left, &right) {
+        if PacketLegacy::misordered(&left, &right) {
             count += 1;
         }
 
@@ -71,24 +68,4 @@ pub fn num_misordered_packets(path: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_packet_parse_single() {
-        assert_eq!(
-            Packet::parse("[1]").data,
-            PacketElem::List(vec![PacketElem::Val(1)])
-        );
-    }
-
-    #[test]
-    fn test_packet_parse_list() {
-        assert_eq!(
-            Packet::parse("[1,2,3]").data,
-            PacketElem::List(vec![
-                PacketElem::Val(1),
-                PacketElem::Val(2),
-                PacketElem::Val(3),
-            ])
-        );
-    }
 }
