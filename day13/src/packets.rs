@@ -1,37 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use std::str::FromStr;
-
-#[derive(Debug, PartialEq)]
-enum PacketElem {
-    List(Vec<PacketElem>),
-    Val(i64),
-}
-
-struct PacketLegacy {
-    data: PacketElem,
-}
-
-impl PacketLegacy {
-    pub fn empty() -> Self {
-        PacketLegacy {
-            data: PacketElem::List(vec![]),
-        }
-    }
-
-    pub fn parse(line: &str) -> Self {
-        fn parse_list(subline: &str) -> PacketLegacy {
-            PacketLegacy::empty()
-        }
-
-        PacketLegacy::empty()
-    }
-
-    pub fn misordered(left: &PacketLegacy, right: &PacketLegacy) -> bool {
-        false
-    }
-}
+use crate::packet::{Packet, misordered};
 
 pub fn num_misordered_packets(path: &str) -> usize {
     let mut reader = BufReader::new(File::open(path).expect("Could not open file."));
@@ -51,10 +21,10 @@ pub fn num_misordered_packets(path: &str) -> usize {
             break;
         }
 
-        let left = PacketLegacy::parse(&buf_left);
-        let right = PacketLegacy::parse(&buf_right);
+        let left: Packet = buf_left.parse().expect("Could not parse packet.");
+        let right: Packet = buf_right.parse().expect("Could not parse packet.");
 
-        if PacketLegacy::misordered(&left, &right) {
+        if misordered(&left, &right) {
             count += 1;
         }
 
