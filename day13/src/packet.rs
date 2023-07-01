@@ -1,13 +1,9 @@
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_while1};
-use nom::bytes::streaming::is_a;
-use nom::character::complete::one_of;
-use nom::character::is_space;
-use nom::multi::{many_till, separated_list1};
+use nom::multi::separated_list1;
 use nom::sequence::delimited;
-use nom::{AsChar, Err, Finish, IResult};
+use nom::{AsChar, Finish, IResult};
 
-use std::io::empty;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
@@ -35,19 +31,17 @@ impl FromStr for Packet {
     }
 }
 
-pub fn misordered(left: &Packet, right: &Packet) -> bool {
+pub fn misordered(_left: &Packet, _right: &Packet) -> bool {
     todo!()
 }
 
 fn parse_int_atom(input: &str) -> IResult<&str, Packet> {
     let parser = take_while1(AsChar::is_dec_digit);
     match parser(input) {
-        Ok((rest, parsed_atom)) => {
-            return Ok((
-                rest,
-                Packet::Val(parsed_atom.parse().expect("Could not parse integer.")),
-            ));
-        }
+        Ok((rest, parsed_atom)) => Ok((
+            rest,
+            Packet::Val(parsed_atom.parse().expect("Could not parse integer.")),
+        )),
         Err(x) => Err(x),
     }
 }
@@ -55,7 +49,7 @@ fn parse_int_atom(input: &str) -> IResult<&str, Packet> {
 fn parse_list_empty(input: &str) -> IResult<&str, Packet> {
     let empty_list = tag("[]");
     match empty_list(input) {
-        Ok((rest, matched)) => Ok((rest, Packet::empty())),
+        Ok((rest, _)) => Ok((rest, Packet::empty())),
         Err(x) => Err(x),
     }
 }
@@ -69,36 +63,12 @@ fn parse_list_single(input: &str) -> IResult<&str, Packet> {
     }
 }
 
-fn parse_list_multi(input: &str) -> IResult<&str, Packet> {
-    let mut parser = delimited(
-        tag("["),
-        separated_list1(tag(","), parse_int_atom),
-        tag("]"),
-    );
-
-    match parser(input) {
-        Ok((rest, atoms)) => Ok((rest, Packet::List(atoms))),
-        Err(x) => Err(x),
-    }
-}
-
 fn parse_list_atom(input: &str) -> IResult<&str, Packet> {
-
     // Empty or single-item list
     let mut base_parser = alt((parse_list_empty, parse_list_single));
     if let Ok((rest, parsed)) = base_parser(input) {
         return Ok((rest, parsed));
     }
-
-    // Parse nested Packets, but first match string form before recursing
-    let mut peek_inner_recurse = |inp| {
-        let res = delimited(tag("["), is_a(",1234567890"), tag("]"))(inp);
-        if res.is_ok() {
-            return parse_list_atom(inp);
-        } else {
-            return Err(res.err().unwrap());
-        }
-    };
 
     // Recursive case: match a comma-separated string of ints and Packets
     let mut multi_parser = delimited(
@@ -115,12 +85,8 @@ fn parse_list_atom(input: &str) -> IResult<&str, Packet> {
         tag("]"),
     );
     match multi_parser(input) {
-        Ok((rest, atoms)) => {
-            Ok((rest, Packet::List(atoms)))
-        }
-        Err(x) => {
-            Err(x)
-        }
+        Ok((rest, atoms)) => Ok((rest, Packet::List(atoms))),
+        Err(x) => Err(x),
     }
 }
 
@@ -179,11 +145,7 @@ mod tests {
                 "",
                 Packet::List(vec![
                     Packet::Val(3),
-                    Packet::List(vec![
-                        Packet::Val(1),
-                        Packet::List(vec![]),
-                        Packet::Val(8),
-                    ]),
+                    Packet::List(vec![Packet::Val(1), Packet::List(vec![]), Packet::Val(8),]),
                     Packet::List(vec![Packet::List(vec![Packet::Val(1)])]),
                 ])
             ))
