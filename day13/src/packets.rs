@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::packet::{Packet, misordered};
+use crate::packet::{misordered, Packet};
 
 pub fn num_misordered_packets(path: &str) -> usize {
     let mut reader = BufReader::new(File::open(path).expect("Could not open file."));

@@ -1,10 +1,11 @@
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_while1};
+use nom::bytes::streaming::is_a;
 use nom::character::complete::one_of;
 use nom::character::is_space;
-use nom::multi::{separated_list1, many_till};
+use nom::multi::{many_till, separated_list1};
 use nom::sequence::delimited;
-use nom::{AsChar, IResult, Err, Finish};
+use nom::{AsChar, Err, Finish, IResult};
 
 use std::io::empty;
 use std::str::FromStr;
@@ -42,11 +43,11 @@ fn parse_int_atom(input: &str) -> IResult<&str, Packet> {
     let parser = take_while1(AsChar::is_dec_digit);
     match parser(input) {
         Ok((rest, parsed_atom)) => {
-            println!("parse_int_atom: rest=|{rest}| parsed=|{parsed_atom}|");
-            Ok((
+            println!("parse_int_atom! rest=|{rest}| parsed=|{parsed_atom}|");
+            return Ok((
                 rest,
                 Packet::Val(parsed_atom.parse().expect("Could not parse integer.")),
-            ))
+            ));
         }
         Err(x) => Err(x),
     }
@@ -70,10 +71,11 @@ fn parse_list_single(input: &str) -> IResult<&str, Packet> {
 }
 
 fn parse_list_multi(input: &str) -> IResult<&str, Packet> {
-    let mut parser = 
-        delimited(tag("["), 
+    let mut parser = delimited(
+        tag("["),
         separated_list1(tag(","), parse_int_atom),
-        tag("]"));
+        tag("]"),
+    );
 
     match parser(input) {
         Ok((rest, atoms)) => Ok((rest, Packet::List(atoms))),
@@ -82,42 +84,50 @@ fn parse_list_multi(input: &str) -> IResult<&str, Packet> {
 }
 
 fn parse_list_atom(input: &str) -> IResult<&str, Packet> {
+    println!("parse_list_atom: |{input}|");
 
     // Empty or single-item list
     let mut base_parser = alt((parse_list_empty, parse_list_single));
     if let Ok((rest, parsed)) = base_parser(input) {
-        println!("parse_list_atom: unit list rest=|{rest}| parsed={parsed:?}");
+        println!("parse_list_atom base: unit list rest=|{rest}| parsed={parsed:?}");
         return Ok((rest, parsed));
     }
 
+    // Parse nested Packets, but first match string form before recursing
     let mut peek_inner_recurse = |inp| {
-        let res = delimited(tag("["), 
-                many_till(one_of(",123456789["), tag("]")), 
-                tag("]"))(inp);
+        let res = delimited(tag("["), is_a(",1234567890"), tag("]"))(inp);
         if res.is_ok() {
+            println!("parse_list_atom: recursing on |{inp}|");
             return parse_list_atom(inp);
         } else {
-            return Err(res.err().unwrap())
+            return Err(res.err().unwrap());
         }
     };
 
-    // Recursive case: multi-item list, potentially nested
-    let mut multi_parser = separated_list1(tag(","),
-        alt((
-            parse_int_atom,
-            parse_list_empty,
-            parse_list_single,
-            peek_inner_recurse,       // nested lists
-        )));
+    // Recursive case: match a comma-separated string of ints and Packets
+    let mut multi_parser = delimited(
+        tag("["),
+        separated_list1(
+            tag(","),
+            alt((
+                parse_int_atom,
+                parse_list_empty,
+                parse_list_single,
+                peek_inner_recurse, // nested lists
+            )),
+        ),
+        tag("]"),
+    );
     match multi_parser(input) {
-        Ok((rest, atoms)) => Ok((rest, Packet::List(atoms))),
-        Err(x) => Err(x),
+        Ok((rest, atoms)) => {
+            println!("Parsed list: {atoms:?}");
+            Ok((rest, Packet::List(atoms)))
+        }
+        Err(x) => {
+            println!("nope!");
+            Err(x)
+        }
     }
-}
-
-
-fn parse_packet(input: &str) -> IResult<&str, Packet> {
-    Ok((input, Packet::empty()))
 }
 
 #[cfg(test)]
@@ -147,19 +157,37 @@ mod tests {
             parse_list_atom("[3]"),
             Ok(("", Packet::List(vec![Packet::Val(3)])))
         );
+
+        assert_eq!(
+            parse_list_atom(r"[[3]]"),
+            Ok(("", Packet::List(vec![Packet::List(vec![Packet::Val(3)])])))
+        );
+
+        assert_eq!(
+            parse_list_atom(r"[[]]"),
+            Ok(("", Packet::List(vec![Packet::List(vec![])])))
+        );
     }
 
     #[test]
     fn test_parse_list_multi() {
         assert_eq!(
             parse_list_atom("[3,4]"),
-            Ok(("", Packet::List(vec![Packet::Val(3), Packet::Val(4)]))));
+            Ok(("", Packet::List(vec![Packet::Val(3), Packet::Val(4)])))
+        );
     }
 
     #[test]
     fn test_parse_list_nested() {
-        assert_eq!(parse_list_atom("[3,[1,[],8],[[1]]]"),
-            Ok(("", Packet::List(vec![Packet::Val(3), Packet::List(vec![Packet::Val(1), Packet::Val(8)])])))
+        assert_eq!(
+            parse_list_atom("[3,[1,[],8],[[1]]]"),
+            Ok((
+                "",
+                Packet::List(vec![
+                    Packet::Val(3),
+                    Packet::List(vec![Packet::Val(1), Packet::Val(8)])
+                ])
+            ))
         );
     }
 
