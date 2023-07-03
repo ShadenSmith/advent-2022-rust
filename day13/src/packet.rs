@@ -4,6 +4,8 @@ use nom::multi::separated_list1;
 use nom::sequence::delimited;
 use nom::{AsChar, Finish, IResult};
 
+use std::cmp::Ordering;
+
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
@@ -31,8 +33,49 @@ impl FromStr for Packet {
     }
 }
 
-pub fn misordered(_left: &Packet, _right: &Packet) -> bool {
-    todo!()
+pub fn are_packets_ordered(left: &Packet, right: &Packet) -> bool {
+    use Packet::{List, Val};
+
+    fn inner(left_node: &Packet, right_node: &Packet) -> Ordering {
+        println!("Inner: {left_node:?} vs {right_node:?}");
+        match (left_node, right_node) {
+            (Val(a), Val(b)) => { let res = a.cmp(&b); println!("   ={res:?}"); res},
+            (Val(a), List(_)) => inner(&List(vec![Val(*a)]), &right_node),
+            (List(_), Val(b)) => inner(&left_node, &List(vec![Val(*b)])),
+            (List(avs), List(bvs)) => {
+                // Walk the lists and compare
+                let mut left_iter = avs.iter();
+                let mut right_iter = bvs.iter();
+
+                loop {
+                    let a = left_iter.next();
+                    let b = right_iter.next();
+
+                    println!("Comparing: {a:?} vs {b:?}");
+
+                    match (a, b) {
+                        (None, None) => return Ordering::Equal,
+                        (None, Some(right_rest)) => return Ordering::Less,
+                        (Some(a_node), None) => return Ordering::Greater,
+                        (Some(a_node), Some(b_node)) => {
+                            let eval = inner(&a_node, &b_node);
+                            if eval == Ordering::Equal {
+                                // Move to the next pair of elems
+                                continue;
+                            }
+                            return eval;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    match inner(left, right) {
+        Ordering::Less => true,
+        Ordering::Greater => false,
+        Ordering::Equal => unreachable!(),
+    }
 }
 
 fn parse_int_atom(input: &str) -> IResult<&str, Packet> {
@@ -167,5 +210,34 @@ mod tests {
 
         // TODO: this incorrectly passes
         // assert!(parse_list_atom("[2],3,[2]").is_err());
+    }
+
+    #[test]
+    fn test_ordered_ints() {
+        let left: Packet = "[1,1,3,1,1]".parse().unwrap();
+        let right: Packet = "[1,1,5,1,1]".parse().unwrap();
+        assert_eq!(are_packets_ordered(&left, &right), true);
+    }
+
+
+    #[test]
+    fn test_ordered_mixed1() {
+        let left: Packet = "[[1],[2,3,4]]".parse().unwrap();
+        let right: Packet = "[[1],4]".parse().unwrap();
+        assert_eq!(are_packets_ordered(&left, &right), true);
+    }
+
+    #[test]
+    fn test_ordered_mixed2() {
+        let left: Packet = "[9]".parse().unwrap();
+        let right: Packet = "[[8,7,6]]".parse().unwrap();
+        assert_eq!(are_packets_ordered(&left, &right), false);
+    }
+
+    #[test]
+    fn test_ordered_merge() {
+        let left: Packet = "[7,7,7,7]".parse().unwrap();
+        let right: Packet = "[7,7,7]".parse().unwrap();
+        assert_eq!(are_packets_ordered(&left, &right), false);
     }
 }
