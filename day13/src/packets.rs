@@ -48,7 +48,50 @@ pub fn num_misordered_packets(path: &str) -> usize {
     count
 }
 
+pub fn part2(path: &str) -> usize {
+    let reader = BufReader::new(File::open(path).expect("Could not open file."));
+
+    let mut parsed: Vec<Packet> = reader
+        .lines()
+        .filter(|l| l.as_ref().unwrap().len() > 0)
+        .map(|l| l.unwrap().trim_end().parse().unwrap())
+        .collect();
+
+    let markers: Vec<Packet> = vec!["[[2]]".parse().unwrap(), "[[6]]".parse().unwrap()];
+
+    parsed.push("[[2]]".parse().unwrap());
+    parsed.push("[[6]]".parse().unwrap());
+
+    parsed.sort_by(|a, b| {
+        if are_packets_ordered(a, b) {
+            std::cmp::Ordering::Less
+        } else {
+            std::cmp::Ordering::Greater
+        }
+    });
+
+    let mut marker_idxs = Vec::new();
+    for (idx, p) in parsed.iter().enumerate() {
+        if markers.contains(p) {
+            marker_idxs.push(idx + 1);
+        }
+    }
+    println!("{marker_idxs:?}");
+
+    marker_idxs.iter().product()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_part1() {
+        assert_eq!(num_misordered_packets("inputs/test.txt"), 13);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2("inputs/test.txt"), 140);
+    }
 }
