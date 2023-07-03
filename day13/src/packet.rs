@@ -39,9 +39,13 @@ pub fn are_packets_ordered(left: &Packet, right: &Packet) -> bool {
     fn inner(left_node: &Packet, right_node: &Packet) -> Ordering {
         println!("Inner: {left_node:?} vs {right_node:?}");
         match (left_node, right_node) {
-            (Val(a), Val(b)) => { let res = a.cmp(&b); println!("   ={res:?}"); res},
-            (Val(a), List(_)) => inner(&List(vec![Val(*a)]), &right_node),
-            (List(_), Val(b)) => inner(&left_node, &List(vec![Val(*b)])),
+            (Val(a), Val(b)) => {
+                let res = a.cmp(b);
+                println!("   ={res:?}");
+                res
+            }
+            (Val(a), List(_)) => inner(&List(vec![Val(*a)]), right_node),
+            (List(_), Val(b)) => inner(left_node, &List(vec![Val(*b)])),
             (List(avs), List(bvs)) => {
                 // Walk the lists and compare
                 let mut left_iter = avs.iter();
@@ -55,10 +59,10 @@ pub fn are_packets_ordered(left: &Packet, right: &Packet) -> bool {
 
                     match (a, b) {
                         (None, None) => return Ordering::Equal,
-                        (None, Some(right_rest)) => return Ordering::Less,
-                        (Some(a_node), None) => return Ordering::Greater,
+                        (None, Some(_)) => return Ordering::Less,
+                        (Some(_), None) => return Ordering::Greater,
                         (Some(a_node), Some(b_node)) => {
-                            let eval = inner(&a_node, &b_node);
+                            let eval = inner(a_node, b_node);
                             if eval == Ordering::Equal {
                                 // Move to the next pair of elems
                                 continue;
@@ -218,7 +222,6 @@ mod tests {
         let right: Packet = "[1,1,5,1,1]".parse().unwrap();
         assert_eq!(are_packets_ordered(&left, &right), true);
     }
-
 
     #[test]
     fn test_ordered_mixed1() {

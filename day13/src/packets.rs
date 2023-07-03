@@ -23,9 +23,14 @@ pub fn num_misordered_packets(path: &str) -> usize {
             break;
         }
 
-
-        let left: Packet = buf_left.trim_end().parse().expect("Could not parse packet.");
-        let right: Packet = buf_right.trim_end().parse().expect("Could not parse packet.");
+        let left: Packet = buf_left
+            .trim_end()
+            .parse()
+            .expect("Could not parse packet.");
+        let right: Packet = buf_right
+            .trim_end()
+            .parse()
+            .expect("Could not parse packet.");
 
         if are_packets_ordered(&left, &right) {
             count += idx;
