@@ -37,13 +37,8 @@ pub fn are_packets_ordered(left: &Packet, right: &Packet) -> bool {
     use Packet::{List, Val};
 
     fn inner(left_node: &Packet, right_node: &Packet) -> Ordering {
-        println!("Inner: {left_node:?} vs {right_node:?}");
         match (left_node, right_node) {
-            (Val(a), Val(b)) => {
-                let res = a.cmp(b);
-                println!("   ={res:?}");
-                res
-            }
+            (Val(a), Val(b)) => a.cmp(b),
             (Val(a), List(_)) => inner(&List(vec![Val(*a)]), right_node),
             (List(_), Val(b)) => inner(left_node, &List(vec![Val(*b)])),
             (List(avs), List(bvs)) => {
@@ -54,8 +49,6 @@ pub fn are_packets_ordered(left: &Packet, right: &Packet) -> bool {
                 loop {
                     let a = left_iter.next();
                     let b = right_iter.next();
-
-                    println!("Comparing: {a:?} vs {b:?}");
 
                     match (a, b) {
                         (None, None) => return Ordering::Equal,
