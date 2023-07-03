@@ -53,7 +53,7 @@ pub fn part2(path: &str) -> usize {
 
     let mut parsed: Vec<Packet> = reader
         .lines()
-        .filter(|l| l.as_ref().unwrap().len() > 0)
+        .filter(|l| !l.as_ref().unwrap().is_empty())
         .map(|l| l.unwrap().trim_end().parse().unwrap())
         .collect();
 
