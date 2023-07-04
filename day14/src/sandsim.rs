@@ -22,20 +22,19 @@ impl SandSim {
     }
 
     fn get_next_pos(&self, pos: &(i64, i64)) -> Option<(i64, i64)> {
-        let mut cand = pos.clone();
-
         // First try falling straight down
-        cand = (pos.0, pos.1 + 1);
+        let cand = (pos.0, pos.1 + 1);
         if self.get(&cand) == Tile::Air {
             return Some(cand);
         }
 
         // Diag-left, then diag right
-        cand = (pos.0 - 1, pos.1 + 1);
+        let cand = (pos.0 - 1, pos.1 + 1);
         if self.get(&cand) == Tile::Air {
             return Some(cand);
         }
-        cand = (pos.0 + 1, pos.1 + 1);
+
+        let cand = (pos.0 + 1, pos.1 + 1);
         if self.get(&cand) == Tile::Air {
             return Some(cand);
         }
@@ -50,11 +49,11 @@ impl SandSim {
         loop {
             let next = self.get_next_pos(&sand);
 
-            if next.is_some() {
-                sand = next.unwrap();
-            } else {
-                self.set(sand.clone(), Tile::Sand);
+            if next.is_none() {
+                self.set(sand, Tile::Sand);
                 return Some(sand);
+            } else {
+                sand = next.unwrap();
             }
 
             // Falling forever
@@ -67,7 +66,7 @@ impl SandSim {
     pub fn sand_capacity(&mut self) -> usize {
         let mut num_sands = 0;
 
-        while let Some(_) = self.add_sand() {
+        while self.add_sand().is_some() {
             num_sands += 1;
         }
 
@@ -83,24 +82,24 @@ impl SandSim {
             let points: Vec<(i64, i64)> = line
                 .split(" -> ")
                 .map(|pstr| {
-                    let xys: Vec<&str> = pstr.split(",").collect();
+                    let xys: Vec<&str> = pstr.split(',').collect();
                     if xys.len() != 2 {
                         panic!("bad coord");
                     }
-                    return (xys[0].parse().unwrap(), xys[1].parse().unwrap());
+                    (xys[0].parse().unwrap(), xys[1].parse().unwrap())
                 })
                 .collect();
 
             for (idx, p2) in points.iter().cloned().enumerate().skip(1) {
                 let mut p1 = points[idx - 1];
 
-                sim.set(p1.clone(), Tile::Rock);
+                sim.set(p1, Tile::Rock);
 
                 while p1 != p2 {
                     let clamp = |v| min(max(v, -1), 1);
                     p1.0 += clamp(p2.0 - p1.0);
                     p1.1 += clamp(p2.1 - p1.1);
-                    sim.set(p1.clone(), Tile::Rock);
+                    sim.set(p1, Tile::Rock);
                 }
             }
         }
@@ -117,7 +116,13 @@ impl SandSim {
     }
 
     pub fn get_max_depth(&self) -> i64 {
-        self.tiles.keys().map(|(_, y)| y).max().unwrap().clone()
+        *self.tiles.keys().map(|(_, y)| y).max().unwrap()
+    }
+}
+
+impl Default for SandSim {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
