@@ -1,14 +1,14 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod sandsim;
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    use sandsim::SandSim;
+
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn test_part1() {
+        let mut sim = SandSim::from_path("inputs/test.txt");
+        assert_eq!(sim.sand_capacity(), 24);
     }
 }
