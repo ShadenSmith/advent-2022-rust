@@ -12,13 +12,19 @@ pub enum Tile {
 
 pub struct SandSim {
     tiles: HashMap<(i64, i64), Tile>,
+    floor: Option<i64>,
 }
 
 impl SandSim {
     pub fn new() -> Self {
         SandSim {
             tiles: HashMap::new(),
+            floor: None,
         }
+    }
+
+    pub fn set_floor(&mut self, depth: i64) {
+        self.floor = Some(depth);
     }
 
     fn get_next_pos(&self, pos: &(i64, i64)) -> Option<(i64, i64)> {
@@ -46,6 +52,11 @@ impl SandSim {
         let max_depth = self.get_max_depth();
 
         let mut sand = (500, 0);
+        // if already clogged
+        if self.get(&sand) != Tile::Air {
+            return None;
+        }
+
         loop {
             let next = self.get_next_pos(&sand);
 
@@ -57,13 +68,25 @@ impl SandSim {
             }
 
             // Falling forever
-            if sand.1 > max_depth {
+            if sand.1 > max_depth && self.floor.is_none() {
                 return None;
             }
         }
     }
 
     pub fn sand_capacity(&mut self) -> usize {
+        let mut num_sands = 0;
+
+        while self.add_sand().is_some() {
+            num_sands += 1;
+        }
+
+        num_sands
+    }
+
+    pub fn sand_capacity_with_inf_floor(&mut self) -> usize {
+        self.set_floor(self.get_max_depth() + 2);
+
         let mut num_sands = 0;
 
         while self.add_sand().is_some() {
@@ -83,9 +106,7 @@ impl SandSim {
                 .split(" -> ")
                 .map(|pstr| {
                     let xys: Vec<&str> = pstr.split(',').collect();
-                    if xys.len() != 2 {
-                        panic!("bad coord");
-                    }
+                    assert_eq!(xys.len(), 2);
                     (xys[0].parse().unwrap(), xys[1].parse().unwrap())
                 })
                 .collect();
@@ -108,6 +129,13 @@ impl SandSim {
     }
 
     pub fn get(&self, pos: &(i64, i64)) -> Tile {
+        // Check for infinite floor
+        if let Some(floor) = self.floor {
+            if pos.1 == floor {
+                return Tile::Rock;
+            }
+        }
+
         self.tiles.get(pos).unwrap_or(&Tile::Air).clone()
     }
 
@@ -116,7 +144,27 @@ impl SandSim {
     }
 
     pub fn get_max_depth(&self) -> i64 {
-        *self.tiles.keys().map(|(_, y)| y).max().unwrap()
+        self.floor
+            .unwrap_or(*self.tiles.keys().map(|(_, y)| y).max().unwrap())
+    }
+
+    pub fn draw(&self) {
+        // Get the min and max column for width
+        let min_col = self.tiles.keys().map(|(x, _)| x).min().unwrap().clone();
+        let max_col = self.tiles.keys().map(|(x, _)| x).max().unwrap().clone();
+
+        let max_row = self.get_max_depth();
+        for row in 0..max_row {
+            for col in min_col..max_col {
+                let t = self.get(&(col, row));
+                match t {
+                    Tile::Air => print!("."),
+                    Tile::Sand => print!("o"),
+                    Tile::Rock => print!("#"),
+                }
+            }
+            println!();
+        }
     }
 }
 
